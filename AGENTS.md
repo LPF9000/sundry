@@ -36,7 +36,7 @@ digest engine without copying any Python code. Concretely:
      contents: write
    jobs:
      digest:
-       uses: LPF9000/semiconductor-news/.github/workflows/digest-reusable.yml@v1
+       uses: LPF9000/semiconductor-news/.github/workflows/digest-reusable.yml@v1.0.0
        with:
          recipient: ${{ vars.DIGEST_RECIPIENT }}
        secrets:
