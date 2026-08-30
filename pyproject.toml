@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "tech-news-digest"
 version = "0.2.0"
-description = "Reusable, config-driven daily news digest builder — ships pre-configured for semiconductor/DV news"
+description = "Reusable, config-driven daily news digest builder — bring your own topic, no fork needed"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

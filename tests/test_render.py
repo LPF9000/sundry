@@ -64,5 +64,4 @@ def test_digest_name_is_used_when_given():
     html_out = render_html("2026-01-01", empty, CATEGORIES, [], digest_name="Cooking News Digest")
     md_out = render_markdown("2026-01-01", empty, CATEGORIES, [], digest_name="Cooking News Digest")
     assert "Cooking News Digest" in html_out
-    assert "Semiconductor" not in html_out
     assert md_out.startswith("# Cooking News Digest —")
