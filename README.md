@@ -1,32 +1,31 @@
-# semiconductor-news
+# tech-news-digest
 
-[![CI](https://github.com/LPF9000/semiconductor-news/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/semiconductor-news/actions/workflows/ci.yml)
-[![Daily Digest](https://github.com/LPF9000/semiconductor-news/actions/workflows/daily-digest.yml/badge.svg)](https://github.com/LPF9000/semiconductor-news/actions/workflows/daily-digest.yml)
+[![CI](https://github.com/LPF9000/tech-news-digest/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/tech-news-digest/actions/workflows/ci.yml)
+[![Daily Digest](https://github.com/LPF9000/tech-news-digest/actions/workflows/daily-digest.yml/badge.svg)](https://github.com/LPF9000/tech-news-digest/actions/workflows/daily-digest.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-A daily, self-updating digest of public research and news relevant to
-Design Verification, UVM, RTL/architecture, mixed-signal, DFT and advanced
-packaging, hardware security/cryptography, RISC-V and processor
-architecture, EDA tools/flows, and the conferences where it all gets
-presented: DVCon, DAC, ISSCC, Hot Chips, CHES, and others.
+A reusable, config-driven tool that fetches public news/research sources
+on a schedule and emails you a daily digest — built and run entirely on
+GitHub Actions, no server to host. Nothing about how it works is tied to
+any one subject: this repo ships pre-configured with a semiconductor and
+design-verification default topic (see [Topic coverage](#topic-coverage)),
+but repointing it at any other subject is a config file, not a code
+change — see [Using this for your own topic](#using-this-for-your-own-topic).
 
-It runs entirely on a scheduled GitHub Actions workflow, pulls only from
-free/public sources (no scraping behind logins, no paid APIs), and emails
-a digest every day. It also keeps a browsable Markdown archive of every
-day's digest in [`digests/`](./digests).
+It pulls only from free/public sources (no scraping behind logins, no
+paid APIs), and keeps a browsable Markdown archive of every day's digest
+in [`digests/`](./digests).
 
 ## Using this for your own topic
 
-Nothing here is semiconductor-specific in *how* it works — only in
-`config/feeds.toml`'s content. **You don't need to fork this repository
-to reuse it.**
+**You don't need to fork this repository to reuse it.**
 
 ### Recommended: no fork, no copied code
 
 This repo publishes itself as a reusable GitHub Actions workflow
 (`.github/workflows/digest-reusable.yml`). Any repo — new or existing,
 yours, unrelated to this one — can pull in the whole digest engine with
-one config file and a 12-line workflow:
+one config file and a short workflow:
 
 1. In **your own repo**, create `config/feeds.toml` — see
    [Tuning the digest](#tuning-the-digest) for the schema, or hand the
@@ -44,7 +43,7 @@ one config file and a 12-line workflow:
      contents: write
    jobs:
      digest:
-       uses: LPF9000/semiconductor-news/.github/workflows/digest-reusable.yml@v1.0.0
+       uses: LPF9000/tech-news-digest/.github/workflows/digest-reusable.yml@v2.0.0
        with:
          recipient: ${{ vars.DIGEST_RECIPIENT }}
        secrets:
@@ -58,8 +57,8 @@ one config file and a 12-line workflow:
    *your* repo), and flip **Workflow permissions** to "Read and write."
 
 That's the entire setup. Nothing to clone, no Python to install locally,
-no copy of `src/semiconductor_digest/` to keep in sync with this repo's
-own updates — `@v1.0.0` always installs this project's tagged release
+no copy of `src/tech_news_digest/` to keep in sync with this repo's own
+updates — `@v2.0.0` always installs this project's tagged release
 straight from GitHub at run time. This mirrors how a real GitHub Action
 is meant to be consumed (see
 [GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
@@ -82,9 +81,9 @@ convention, so your agent can read it directly rather than you having to
 paraphrase this README. A prompt like:
 
 > Set up a daily digest for **[your topic]** using the reusable workflow
-> from https://github.com/LPF9000/semiconductor-news (see its
-> `AGENTS.md`) in this repo. Sources: [any specific sites/feeds you
-> already know]. I want it emailed to **[your address]**.
+> from https://github.com/LPF9000/tech-news-digest (see its `AGENTS.md`)
+> in this repo. Sources: [any specific sites/feeds you already know]. I
+> want it emailed to **[your address]**.
 
 is enough for a capable agent to write `config/feeds.toml`, add the
 caller workflow, and tell you exactly which three settings to fill in in
@@ -138,12 +137,12 @@ Every pull request also builds a real digest from live sources and, once
 the secrets above are set, emails you a preview of it before merge — see
 [Continuous integration](#continuous-integration).
 
-The recipient defaults to `bestasitis@gmail.com` (this fork's original
-owner) but is overridable without touching any YAML: set a
-**`DIGEST_RECIPIENT`** repository variable at **Settings > Secrets and
-variables > Actions > Variables tab > New repository variable**, and
-both workflows pick it up automatically. If you forked this for your
-own topic, set this — otherwise your digest emails the previous owner.
+The recipient defaults to `bestasitis@gmail.com` (this repo's owner) but
+is overridable without touching any YAML: set a **`DIGEST_RECIPIENT`**
+repository variable at **Settings > Secrets and variables > Actions >
+Variables tab > New repository variable**, and both workflows pick it up
+automatically. Running your own copy of this repo for a different
+recipient? Set this — otherwise your digest emails the address above.
 
 Using a provider other than Gmail? Swap `server_address`/`server_port` in
 both workflow files for your provider's SMTP details (see the
@@ -154,10 +153,8 @@ both workflow files for your provider's SMTP details (see the
 Each run:
 
 1. Fetches the latest items from a set of RSS/Atom feeds, the public
-   arXiv API (`cs.AR` Hardware Architecture, plus a hardware-flavored
-   `cs.CR` Crypto & Security search), and the Hacker News (Algolia) API
-   for a handful of topic searches — concurrently, so one slow source
-   doesn't hold up the rest.
+   arXiv API, and the Hacker News (Algolia) API for a handful of topic
+   searches — concurrently, so one slow source doesn't hold up the rest.
 2. Drops anything already sent in the last ~45 days, tracked in
    `state/seen.json`.
 3. Buckets what's left into topic categories by keyword match (see
@@ -173,7 +170,7 @@ failing the whole run. Nothing here needs to be babysat.
 
 ```
 config/feeds.toml          Source, category, and keyword configuration
-src/semiconductor_digest/  The digest package (fetch, classify, render, CLI)
+src/tech_news_digest/      The digest package (fetch, classify, render, CLI)
 tests/                     Unit tests (mocked HTTP — no live network calls)
 digests/YYYY-MM-DD.md      Archived copy of each day's digest
 state/seen.json            Cross-run dedupe cache
@@ -187,11 +184,11 @@ CLAUDE.md                  Pointer to AGENTS.md, for Claude Code specifically
 .github/actions/           Composite action shared by ci.yml and daily-digest.yml
 ```
 
-`semiconductor_digest` is a proper installable Python package (not a
-loose script): typed with dataclasses and `from __future__ import
-annotations` throughout, one module per concern (`fetchers/`, `classify`,
-`cache`, `render`, `config`, `cli`), and covered by a unit test suite that
-runs against mocked HTTP responses rather than live sources.
+`tech_news_digest` is a proper installable Python package (not a loose
+script): typed with dataclasses and `from __future__ import annotations`
+throughout, one module per concern (`fetchers/`, `classify`, `cache`,
+`render`, `config`, `cli`), and covered by a unit test suite that runs
+against mocked HTTP responses rather than live sources.
 
 ## Continuous integration
 
@@ -266,16 +263,20 @@ uv run ruff format .             # format
 uv run mypy src                  # type-check
 uv run pytest                    # unit tests (mocked HTTP, no network needed)
 
-uv run python -m semiconductor_digest --help   # see all CLI flags
-uv run python -m semiconductor_digest \
+uv run python -m tech_news_digest --help   # see all CLI flags
+uv run python -m tech_news_digest \
   --html-output /tmp/preview.html \
-  --no-write-cache --no-archive                # build a preview without touching repo state
+  --no-write-cache --no-archive            # build a preview without touching repo state
 ```
 
 Added or changed a dependency in `pyproject.toml`? Run `uv lock` and
 commit the updated `uv.lock` alongside it.
 
 ## Topic coverage
+
+This repo's **default** `config/feeds.toml` — what it ships with and
+what the badges above are testing — covers semiconductor design and
+design verification:
 
 - **Design Verification, UVM & Formal** — testbenches, coverage,
   assertions (SVA), formal methods, CDC, portable stimulus, emulation.
@@ -297,10 +298,13 @@ commit the updated `uv.lock` alongside it.
 - **General Semiconductor & Industry News** — catch-all for context
   (fabs, supply chain, market moves).
 
-### Related topics worth adding later
+This is one `config/feeds.toml` away from covering anything else — see
+[Using this for your own topic](#using-this-for-your-own-topic).
 
-A few adjacent areas that came up while scoping this but aren't dedicated
-categories yet — say the word and they're a `config/feeds.toml` edit
+### Related topics worth adding to the default config later
+
+A few adjacent semiconductor-adjacent areas that came up while scoping
+this but aren't dedicated categories yet — a `config/feeds.toml` edit
 away:
 
 - Power-aware design & low-power verification (UPF, clock/power gating)

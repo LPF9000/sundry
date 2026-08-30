@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "semiconductor-digest"
-version = "0.1.0"
-description = "Daily semiconductor / design-verification news & research digest builder"
+name = "tech-news-digest"
+version = "0.2.0"
+description = "Reusable, config-driven daily news digest builder — ships pre-configured for semiconductor/DV news"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -14,6 +14,11 @@ dependencies = [
   "feedparser>=6.0,<7",
   "requests>=2.31,<3",
 ]
+
+[project.urls]
+Homepage = "https://github.com/LPF9000/tech-news-digest"
+Repository = "https://github.com/LPF9000/tech-news-digest"
+Issues = "https://github.com/LPF9000/tech-news-digest/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -25,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-semiconductor-digest = "semiconductor_digest.cli:main"
+tech-news-digest = "tech_news_digest.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -38,7 +43,7 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["semiconductor_digest"]
+known-first-party = ["tech_news_digest"]
 
 [tool.mypy]
 python_version = "3.11"

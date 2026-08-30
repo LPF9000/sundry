@@ -1,6 +1,6 @@
-name: "Set up semiconductor-digest"
+name: "Set up tech-news-digest"
 description: >
-  Installs uv and syncs the semiconductor_digest package from the
+  Installs uv and syncs the tech_news_digest package from the
   committed lockfile, so every workflow in this repo sets up its
   environment the same reproducible way instead of repeating steps.
 inputs:

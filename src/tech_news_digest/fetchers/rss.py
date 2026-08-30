@@ -19,7 +19,7 @@ def fetch_rss(source: RssSource, session: requests.Session) -> FetchOutcome:
 
     Fetching ourselves (rather than letting feedparser do its own HTTP)
     lets us send a browser-like User-Agent and raise on non-2xx responses
-    explicitly — several semiconductor trade sites block feedparser's bare
+    explicitly — several trade/news sites block feedparser's bare
     default UA.
     """
     try:

@@ -8,7 +8,7 @@
 For a config/feeds.toml change: paste the output of running against
 live sources without touching committed state, e.g.
 
-  uv run python -m semiconductor_digest \
+  uv run python -m tech_news_digest \
     --html-output /tmp/preview.html --no-write-cache --no-archive
 
 For a code change: which of `uv run ruff check .`, `uv run ruff format --check .`,
