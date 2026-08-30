@@ -4,10 +4,10 @@ Thanks for considering a contribution. This project has two kinds of
 "contribution," and it's worth being clear about which one you're making:
 
 - **You want your own topic digest** (different field, different sources).
-  You don't need to contribute anything here — fork the repo and edit
-  `config/feeds.toml`. See the "Using this for your own topic" section in
-  the [README](./README.md). That's the intended way to reuse this project,
-  and no permission or PR is needed.
+  You don't need to contribute anything here, and you don't need to fork
+  either — see "Using this for your own topic" in the [README](./README.md)
+  for the reusable-workflow path (one config file + a short caller
+  workflow in your own repo). No permission or PR needed.
 - **You want to improve *this* digest** (a better source, a sharper
   keyword, a real bug, a genuinely reusable feature). That's what the rest
   of this file covers.
