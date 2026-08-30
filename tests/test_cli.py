@@ -2,14 +2,14 @@ import logging
 
 import pytest
 
-from semiconductor_digest.cli import main, parse_args
+from tech_news_digest.cli import main, parse_args
 
 
 def test_version_flag_exits_cleanly(capsys):
     with pytest.raises(SystemExit) as exc_info:
         parse_args(["--version"])
     assert exc_info.value.code == 0
-    assert "semiconductor-digest" in capsys.readouterr().out
+    assert "tech-news-digest" in capsys.readouterr().out
 
 
 def test_help_flag_exits_cleanly():
@@ -32,7 +32,7 @@ def test_log_level_is_case_insensitive():
 
 def test_missing_config_file_exits_cleanly_without_a_traceback(tmp_path, caplog):
     missing = tmp_path / "does-not-exist.toml"
-    with caplog.at_level(logging.ERROR, logger="semiconductor_digest"):
+    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
         exit_code = main(["--config", str(missing)])
     assert exit_code == 1
     assert "Config file not found" in caplog.text
@@ -42,7 +42,7 @@ def test_missing_config_file_exits_cleanly_without_a_traceback(tmp_path, caplog)
 def test_invalid_config_exits_cleanly_without_a_traceback(tmp_path, caplog):
     bad = tmp_path / "feeds.toml"
     bad.write_text('[[categories]]\nkey = "foo"\ntitle = "Foo"\n', encoding="utf-8")  # missing 'general'
-    with caplog.at_level(logging.ERROR, logger="semiconductor_digest"):
+    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
         exit_code = main(["--config", str(bad)])
     assert exit_code == 1
     assert "Invalid config" in caplog.text

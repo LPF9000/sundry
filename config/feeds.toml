@@ -1,6 +1,8 @@
 # Source & topic configuration for the daily digest.
 # Edit this file to add/remove sources or retune keyword matching —
-# semiconductor_digest reads it fresh on every run, no code changes needed.
+# tech_news_digest reads it fresh on every run, no code changes needed.
+# This particular file is the default topic this repo ships with
+# (semiconductor / design-verification news) — repoint it at any topic.
 #
 # TOML, not YAML: parsed with Python's stdlib `tomllib` (3.11+), so this
 # file needs zero extra dependencies to read, and it matches the format

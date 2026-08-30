@@ -23,11 +23,13 @@ on:
         default: config/feeds.toml
       digest-ref:
         description: >
-          Git ref of LPF9000/semiconductor-news to install the digest
-          engine from. Pin to a release tag (e.g. "v1.0.0") for stability
-          — "main" can change under you.
+          Git ref of LPF9000/tech-news-digest to install the digest
+          engine from. Pin to a release tag (e.g. "v2.0.0") for stability
+          — "main" can change under you. Must be v2.0.0 or later: earlier
+          tags predate the tech-news-digest rename and install a package
+          whose CLI entry point is still named semiconductor-digest.
         type: string
-        default: v1.0.0
+        default: v2.0.0
       recipient:
         description: "Who receives the digest email. Pass your repo's own vars.DIGEST_RECIPIENT."
         type: string
@@ -69,8 +71,8 @@ jobs:
 
       - name: Build digest
         run: |
-          uvx --from "git+https://github.com/LPF9000/semiconductor-news.git@${{ inputs.digest-ref }}" \
-            semiconductor-digest --config "${{ inputs.config-path }}"
+          uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@${{ inputs.digest-ref }}" \
+            tech-news-digest --config "${{ inputs.config-path }}"
 
       - name: Commit archive & dedupe cache
         run: |

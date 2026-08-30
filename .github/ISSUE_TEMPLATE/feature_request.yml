@@ -6,10 +6,10 @@ body:
     attributes:
       value: |
         Want a new *topic* covered for your own use (not this repo's
-        semiconductor/DV focus)? You don't need an issue for that — fork
-        and edit `config/feeds.toml`, see the README's "Using this for
-        your own topic" section. This form is for changes to the tool
-        itself.
+        default semiconductor/DV topic)? You don't need an issue for
+        that, and you don't need to fork either — see the README's
+        "Using this for your own topic" section. This form is for
+        changes to the tool itself.
 
   - type: textarea
     id: what

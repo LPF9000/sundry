@@ -1,4 +1,4 @@
-"""Enables `python -m semiconductor_digest`."""
+"""Enables `python -m tech_news_digest`."""
 
 from __future__ import annotations
 

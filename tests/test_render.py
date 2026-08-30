@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
-from semiconductor_digest.models import Article, Category
-from semiconductor_digest.render import render_html, render_markdown
+from tech_news_digest.models import Article, Category
+from tech_news_digest.render import render_html, render_markdown
 
 CATEGORIES = (
     Category(key="dv_uvm", title="DV & UVM", blurb="Testbenches etc.", keywords=(), max_items=8),
