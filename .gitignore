@@ -1,3 +1,10 @@
 digest_output/
 __pycache__/
 *.pyc
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/

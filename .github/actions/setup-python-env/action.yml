@@ -1,0 +1,30 @@
+name: "Set up semiconductor-digest"
+description: >
+  Installs Python and the semiconductor_digest package, so every workflow
+  in this repo sets up its environment the same way instead of repeating
+  the same three steps.
+inputs:
+  extras:
+    description: "Optional extras group to install, e.g. 'dev'. Leave empty for a plain runtime install."
+    required: false
+    default: ""
+  python-version:
+    description: "Python version to set up."
+    required: false
+    default: "3.12"
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+        cache: "pip"
+
+    - name: Install semiconductor_digest
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.extras }}" ]; then
+          pip install -e ".[${{ inputs.extras }}]"
+        else
+          pip install .
+        fi
