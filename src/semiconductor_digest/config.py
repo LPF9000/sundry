@@ -12,8 +12,13 @@ from typing import Any
 
 from .models import ArxivSource, Category, DigestConfig, RssSource
 
-# repo_root/src/semiconductor_digest/config.py -> repo_root/config/feeds.toml
-DEFAULT_CONFIG_PATH = Path(__file__).resolve().parents[2] / "config" / "feeds.toml"
+# Resolved against the current working directory at open() time, not against
+# this file's location: once installed as a real (non-editable) package, this
+# module lives under site-packages, disconnected from the repo checkout, so a
+# `__file__`-relative path would point into the Python install tree instead
+# of the repo. Every caller (both workflows, local dev per the README) runs
+# from the repository root, where this relative path resolves correctly.
+DEFAULT_CONFIG_PATH = Path("config/feeds.toml")
 
 
 class ConfigError(ValueError):

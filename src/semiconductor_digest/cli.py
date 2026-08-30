@@ -16,10 +16,12 @@ from .fetchers import fetch_all
 from .models import Article, DigestConfig
 from .render import render_html, render_markdown, update_archive_index
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_HTML_OUTPUT = REPO_ROOT / "digest_output" / "latest.html"
-DEFAULT_ARCHIVE_DIR = REPO_ROOT / "digests"
-DEFAULT_CACHE_PATH = REPO_ROOT / "state" / "seen.json"
+# Relative to the current working directory, not this file's location — see
+# the comment on config.DEFAULT_CONFIG_PATH for why. All of these assume
+# invocation from the repository root, same as every caller in this repo.
+DEFAULT_HTML_OUTPUT = Path("digest_output/latest.html")
+DEFAULT_ARCHIVE_DIR = Path("digests")
+DEFAULT_CACHE_PATH = Path("state/seen.json")
 
 logger = logging.getLogger("semiconductor_digest")
 
