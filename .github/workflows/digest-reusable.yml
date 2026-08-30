@@ -24,10 +24,10 @@ on:
       digest-ref:
         description: >
           Git ref of LPF9000/semiconductor-news to install the digest
-          engine from. Pin to a release tag (e.g. "v1") for stability —
-          "main" can change under you.
+          engine from. Pin to a release tag (e.g. "v1.0.0") for stability
+          — "main" can change under you.
         type: string
-        default: v1
+        default: v1.0.0
       recipient:
         description: "Who receives the digest email. Pass your repo's own vars.DIGEST_RECIPIENT."
         type: string

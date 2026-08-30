@@ -44,7 +44,7 @@ one config file and a 12-line workflow:
      contents: write
    jobs:
      digest:
-       uses: LPF9000/semiconductor-news/.github/workflows/digest-reusable.yml@v1
+       uses: LPF9000/semiconductor-news/.github/workflows/digest-reusable.yml@v1.0.0
        with:
          recipient: ${{ vars.DIGEST_RECIPIENT }}
        secrets:
@@ -59,7 +59,7 @@ one config file and a 12-line workflow:
 
 That's the entire setup. Nothing to clone, no Python to install locally,
 no copy of `src/semiconductor_digest/` to keep in sync with this repo's
-own updates — `@v1` always installs this project's tagged release
+own updates — `@v1.0.0` always installs this project's tagged release
 straight from GitHub at run time. This mirrors how a real GitHub Action
 is meant to be consumed (see
 [GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
