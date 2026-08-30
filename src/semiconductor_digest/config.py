@@ -55,6 +55,7 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> DigestConfig:
         arxiv_sources=arxiv_sources,
         hn_queries=hn_queries,
         categories=categories,
+        digest_name=raw.get("digest_name", "Daily Digest"),
     )
 
 

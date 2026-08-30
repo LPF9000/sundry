@@ -28,6 +28,7 @@ def render_html(
     categorized: dict[str, list[Article]],
     categories: tuple[Category, ...],
     failures: list[str],
+    digest_name: str = "Daily Digest",
 ) -> str:
     """Render the digest as a self-contained, inline-styled HTML email body."""
     parts = [
@@ -35,7 +36,7 @@ def render_html(
         '<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,'
         'Segoe UI,Helvetica,Arial,sans-serif;color:#18181b;">',
         '<div style="max-width:680px;margin:0 auto;padding:24px 16px;">',
-        '<h1 style="font-size:20px;margin:0 0 4px;">Semiconductor &amp; DV Daily Digest</h1>',
+        f'<h1 style="font-size:20px;margin:0 0 4px;">{html.escape(digest_name)}</h1>',
         f'<p style="margin:0 0 24px;color:#71717a;font-size:13px;">{html.escape(run_date)}</p>',
     ]
 
@@ -84,9 +85,10 @@ def render_markdown(
     categorized: dict[str, list[Article]],
     categories: tuple[Category, ...],
     failures: list[str],
+    digest_name: str = "Daily Digest",
 ) -> str:
     """Render the digest as Markdown, for the repo's browsable archive."""
-    lines = [f"# Semiconductor & DV Daily Digest — {run_date}", ""]
+    lines = [f"# {digest_name} — {run_date}", ""]
 
     if not _has_any_items(categorized, categories):
         lines.append("_Quiet day — no new items across any tracked source since the last run._")

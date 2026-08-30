@@ -1,0 +1,94 @@
+name: Reusable Digest Builder
+
+# Lets ANY repo build and email a digest with this engine, without
+# forking or copying any Python code — see AGENTS.md / README.md
+# "Using this without forking" for the 4-line caller workflow. This
+# checks out and commits back to the CALLING repo; the digest engine
+# itself is installed straight from this repo's git history at
+# `inputs.digest-ref`, pinned to a release tag by default for stability.
+#
+# This repo's own daily-digest.yml deliberately does NOT call this
+# workflow — it installs locally from the committed uv.lock instead, so
+# this repo's own production run is pinned to exact, reproducible
+# dependency versions rather than resolved fresh from a git install.
+# External callers get the simpler (and still safe, since it's pinned to
+# a tag) git-install path.
+
+on:
+  workflow_call:
+    inputs:
+      config-path:
+        description: "Path, in the calling repo, to the feeds.toml config."
+        type: string
+        default: config/feeds.toml
+      digest-ref:
+        description: >
+          Git ref of LPF9000/semiconductor-news to install the digest
+          engine from. Pin to a release tag (e.g. "v1") for stability —
+          "main" can change under you.
+        type: string
+        default: v1
+      recipient:
+        description: "Who receives the digest email. Pass your repo's own vars.DIGEST_RECIPIENT."
+        type: string
+        required: true
+      python-version:
+        type: string
+        default: "3.12"
+      mail-server:
+        type: string
+        default: smtp.gmail.com
+      mail-port:
+        type: number
+        default: 465
+      mail-from-name:
+        type: string
+        default: "Digest Bot"
+    secrets:
+      MAIL_USERNAME:
+        required: true
+      MAIL_PASSWORD:
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      # No `repository:`/`ref:` given, so this checks out the CALLING
+      # repo (the one whose workflow `uses:` this file) — that's where
+      # config/feeds.toml, digests/, and state/seen.json live.
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: ${{ inputs.python-version }}
+          enable-cache: true
+
+      - name: Build digest
+        run: |
+          uvx --from "git+https://github.com/LPF9000/semiconductor-news.git@${{ inputs.digest-ref }}" \
+            semiconductor-digest --config "${{ inputs.config-path }}"
+
+      - name: Commit archive & dedupe cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add digests state/seen.json
+          git diff --cached --quiet || git commit -m "Daily digest $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Send email
+        if: env.DIGEST_HAS_CONTENT == 'true'
+        uses: dawidd6/action-send-mail@v18
+        with:
+          server_address: ${{ inputs.mail-server }}
+          server_port: ${{ inputs.mail-port }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ${{ env.DIGEST_SUBJECT }}
+          to: ${{ inputs.recipient }}
+          from: "${{ inputs.mail-from-name }} <${{ secrets.MAIL_USERNAME }}>"
+          html_body: file://digest_output/latest.html
