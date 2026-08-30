@@ -78,6 +78,6 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "[PR Preview] ${{ env.DIGEST_SUBJECT }} — #${{ github.event.pull_request.number }}"
-          to: bestasitis@gmail.com
+          to: ${{ vars.DIGEST_RECIPIENT || 'bestasitis@gmail.com' }}
           from: "Semiconductor News Bot <${{ secrets.MAIL_USERNAME }}>"
           html_body: file://digest_output/latest.html

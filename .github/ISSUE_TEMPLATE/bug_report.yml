@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in the digest pipeline (fetching, classification, rendering, workflow) is broken
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: a source going temporarily offline is expected and
+        handled (see the email/archive footer for "sources that couldn't
+        be reached") — that's not a bug on its own. This is for the
+        pipeline itself misbehaving.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected vs. what actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: >
+        Ideally a command, e.g.
+        `uv run python -m semiconductor_digest --no-write-cache --no-archive`,
+        or a link to the failing GitHub Actions run.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output/logs
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit / branch
+      description: Which commit or branch you're on (`git rev-parse HEAD`), if running locally.
+    validations:
+      required: false
