@@ -1,11 +1,11 @@
 name: "Set up semiconductor-digest"
 description: >
-  Installs Python and the semiconductor_digest package, so every workflow
-  in this repo sets up its environment the same way instead of repeating
-  the same three steps.
+  Installs uv and syncs the semiconductor_digest package from the
+  committed lockfile, so every workflow in this repo sets up its
+  environment the same reproducible way instead of repeating steps.
 inputs:
   extras:
-    description: "Optional extras group to install, e.g. 'dev'. Leave empty for a plain runtime install."
+    description: "Optional extras group to sync, e.g. 'dev'. Leave empty for a plain runtime install."
     required: false
     default: ""
   python-version:
@@ -15,16 +15,16 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: actions/setup-python@v5
+    - uses: astral-sh/setup-uv@v10.0.1
       with:
         python-version: ${{ inputs.python-version }}
-        cache: "pip"
+        enable-cache: true
 
-    - name: Install semiconductor_digest
+    - name: Sync dependencies (uv.lock)
       shell: bash
       run: |
         if [ -n "${{ inputs.extras }}" ]; then
-          pip install -e ".[${{ inputs.extras }}]"
+          uv sync --locked --extra "${{ inputs.extras }}"
         else
-          pip install .
+          uv sync --locked
         fi

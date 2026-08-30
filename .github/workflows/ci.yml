@@ -29,16 +29,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Ruff (lint)
-        run: ruff check .
+        run: uv run ruff check .
 
       - name: Ruff (format check)
-        run: ruff format --check .
+        run: uv run ruff format --check .
 
       - name: Mypy
-        run: mypy src
+        run: uv run mypy src
 
       - name: Pytest
-        run: pytest -v --cov=semiconductor_digest --cov-report=term-missing
+        run: uv run pytest -v --cov=semiconductor_digest --cov-report=term-missing
 
   preview-digest:
     name: Build & email a preview digest
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build digest (dry run — no commit, no cache write)
         run: |
-          python -m semiconductor_digest \
+          uv run python -m semiconductor_digest \
             --html-output digest_output/latest.html \
             --no-write-cache \
             --no-archive
