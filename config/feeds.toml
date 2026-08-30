@@ -6,10 +6,16 @@
 # file needs zero extra dependencies to read, and it matches the format
 # `pyproject.toml` already uses elsewhere in this repo.
 
-# --- Hacker News (Algolia public API, no key needed) ---------------------
-# NOTE: top-level keys like this one must stay above the first `[[...]]`
+# --- Top-level settings ---------------------------------------------------
+# NOTE: top-level keys like these must stay above the first `[[...]]`
 # array-of-tables header below — TOML attaches bare `key = value` lines to
 # whichever table was most recently opened, not to the document root.
+
+# Title used in the email/archive header and email subject line. This is
+# the one line to change if you're reusing this tool for a different topic.
+digest_name = "Semiconductor & DV Digest"
+
+# --- Hacker News (Algolia public API, no key needed) -----------------------
 
 hn_queries = [
   "RISC-V",

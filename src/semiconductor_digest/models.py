@@ -58,6 +58,10 @@ class DigestConfig:
     arxiv_sources: tuple[ArxivSource, ...]
     hn_queries: tuple[str, ...]
     categories: tuple[Category, ...]
+    digest_name: str = "Daily Digest"
+    """Title used in the email/archive header and email subject. Set via a
+    top-level `digest_name = "..."` key in feeds.toml — this is what makes
+    the tool's output read as *your* topic rather than the default."""
 
     def category_by_key(self) -> dict[str, Category]:
         return {category.key: category for category in self.categories}
