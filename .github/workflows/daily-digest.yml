@@ -23,7 +23,7 @@ jobs:
       - uses: ./.github/actions/setup-python-env
 
       - name: Build digest
-        run: python -m semiconductor_digest
+        run: uv run python -m semiconductor_digest
 
       - name: Commit archive & dedupe cache
         run: |

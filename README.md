@@ -94,6 +94,7 @@ tests/                     Unit tests (mocked HTTP — no live network calls)
 digests/YYYY-MM-DD.md      Archived copy of each day's digest
 state/seen.json            Cross-run dedupe cache
 digest_output/             Scratch dir for the HTML the email step sends (gitignored)
+uv.lock                    Locked, reproducible dependency versions (uv)
 .github/workflows/         CI and the daily digest/email workflow
 .github/actions/           Shared composite action used by both workflows
 ```
@@ -120,13 +121,18 @@ Every pull request runs `.github/workflows/ci.yml`:
 
 The daily workflow (`.github/workflows/daily-digest.yml`) reuses the same
 composite action (`.github/actions/setup-python-env`) to install the
-package, so both workflows always set up their environment identically.
+package via [uv](https://docs.astral.sh/uv/) from the committed
+`uv.lock`, so both workflows always set up their environment identically
+and reproducibly — no "works on my machine" dependency drift.
 
 Dependencies are kept current automatically by
-[Dependabot](.github/dependabot.yml) (weekly, for both pip packages and
-GitHub Actions versions). A [pre-commit](.pre-commit-config.yaml) config
-mirrors the CI lint checks for anyone who wants them to run locally on
-every commit — `pip install pre-commit && pre-commit install`.
+[Dependabot](.github/dependabot.yml) (weekly, for both Python
+dependencies — GitHub's `pip` ecosystem also covers `uv.lock` projects —
+and GitHub Actions versions). A [pre-commit](.pre-commit-config.yaml)
+config mirrors the CI lint checks for anyone who wants them to run
+locally on every commit — `uv run pre-commit install` (or
+`pip install pre-commit && pre-commit install` if you'd rather not add
+it as a project dependency).
 
 ## Tuning the digest
 
@@ -147,20 +153,28 @@ Change the send time by editing the `cron` line in
 
 ## Local development
 
+Dependency management is [uv](https://docs.astral.sh/uv/) — fast, and
+installs are reproducible from the committed `uv.lock` rather than
+whatever happens to resolve on the day you run it.
+[Install uv](https://docs.astral.sh/uv/getting-started/installation/) once,
+then:
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --extra dev       # creates .venv/ and installs exactly what's in uv.lock
 
-ruff check .              # lint
-ruff format .             # format
-mypy src                  # type-check
-pytest                    # unit tests (mocked HTTP, no network needed)
+uv run ruff check .              # lint
+uv run ruff format .             # format
+uv run mypy src                  # type-check
+uv run pytest                    # unit tests (mocked HTTP, no network needed)
 
-python -m semiconductor_digest --help   # see all CLI flags
-python -m semiconductor_digest \
+uv run python -m semiconductor_digest --help   # see all CLI flags
+uv run python -m semiconductor_digest \
   --html-output /tmp/preview.html \
-  --no-write-cache --no-archive         # build a preview without touching repo state
+  --no-write-cache --no-archive                # build a preview without touching repo state
 ```
+
+Added or changed a dependency in `pyproject.toml`? Run `uv lock` and
+commit the updated `uv.lock` alongside it.
 
 ## Topic coverage
 
