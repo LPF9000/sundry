@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/LPF9000/semiconductor-news/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/semiconductor-news/actions/workflows/ci.yml)
 [![Daily Digest](https://github.com/LPF9000/semiconductor-news/actions/workflows/daily-digest.yml/badge.svg)](https://github.com/LPF9000/semiconductor-news/actions/workflows/daily-digest.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 A daily, self-updating digest of public research and news relevant to
 Design Verification, UVM, RTL/architecture, mixed-signal, DFT and advanced
@@ -14,8 +15,33 @@ free/public sources (no scraping behind logins, no paid APIs), and emails
 a digest every day. It also keeps a browsable Markdown archive of every
 day's digest in [`digests/`](./digests).
 
+## Using this for your own topic
+
+Nothing here is semiconductor-specific in how it works — only in
+`config/feeds.toml`'s content. To repurpose this for an entirely
+different field:
+
+1. **Fork the repo.**
+2. **Rewrite `config/feeds.toml`**: swap the RSS/Atom feeds, arXiv
+   search queries, Hacker News search terms, and category
+   keywords/titles/blurbs for your topic. Nothing else needs to change —
+   see [Tuning the digest](#tuning-the-digest).
+3. **Set your own secrets and recipient**: follow
+   [Setting up email](#setting-up-email-required-one-time) with your own
+   sending account, and set the `DIGEST_RECIPIENT` repository variable to
+   your own address (falls back to this fork's original recipient if
+   unset — you want to change that).
+4. Optionally rename the workflow's `name:` fields and this README's
+   title/description if you want it to read as its own project rather
+   than a fork.
+
+No code changes needed for a new topic — if you find yourself editing
+`src/semiconductor_digest/` just to add a source, something's off; see
+[CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Contents
 
+- [Using this for your own topic](#using-this-for-your-own-topic)
 - [Setting up email (required, one-time)](#setting-up-email-required-one-time)
 - [How it works](#how-it-works)
 - [Repository layout](#repository-layout)
@@ -25,6 +51,8 @@ day's digest in [`digests/`](./digests).
 - [Topic coverage](#topic-coverage)
 - [Related topics worth adding later](#related-topics-worth-adding-later)
 - [Operational notes](#operational-notes)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Setting up email (required, one-time)
 
@@ -57,9 +85,12 @@ Every pull request also builds a real digest from live sources and, once
 the secrets above are set, emails you a preview of it before merge — see
 [Continuous integration](#continuous-integration).
 
-The recipient address is hardcoded to `bestasitis@gmail.com` in both
-`.github/workflows/daily-digest.yml` and `.github/workflows/ci.yml` —
-change the `to:` line in each if that ever needs to change.
+The recipient defaults to `bestasitis@gmail.com` (this fork's original
+owner) but is overridable without touching any YAML: set a
+**`DIGEST_RECIPIENT`** repository variable at **Settings > Secrets and
+variables > Actions > Variables tab > New repository variable**, and
+both workflows pick it up automatically. If you forked this for your
+own topic, set this — otherwise your digest emails the previous owner.
 
 Using a provider other than Gmail? Swap `server_address`/`server_port` in
 both workflow files for your provider's SMTP details (see the
@@ -226,3 +257,16 @@ away:
 - Config is TOML, parsed with Python's standard-library `tomllib`
   (3.11+) — reading `config/feeds.toml` needs zero third-party
   dependencies.
+
+## Contributing
+
+Improving *this* tool (a source, a bug, a real feature) vs. wanting your
+own topic digest are different things — see
+[CONTRIBUTING.md](./CONTRIBUTING.md) for which applies and how to set up
+a dev environment, run the checks, and open a PR. This project follows
+the [Contributor Covenant](./CODE_OF_CONDUCT.md). Found a security issue?
+See [SECURITY.md](./SECURITY.md) rather than a public issue.
+
+## License
+
+[MIT](./LICENSE) — use, fork, and modify freely.

@@ -7,6 +7,8 @@ name = "semiconductor-digest"
 version = "0.1.0"
 description = "Daily semiconductor / design-verification news & research digest builder"
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
   "feedparser>=6.0,<7",
