@@ -51,3 +51,18 @@ def test_empty_categories_are_omitted_from_output():
     out = render_markdown("2026-01-01", categorized, CATEGORIES, [])
     assert "DV & UVM" not in out
     assert "General item" in out
+
+
+def test_digest_name_defaults_to_generic_title():
+    empty = {"dv_uvm": [], "general": []}
+    assert "Daily Digest" in render_html("2026-01-01", empty, CATEGORIES, [])
+    assert render_markdown("2026-01-01", empty, CATEGORIES, []).startswith("# Daily Digest —")
+
+
+def test_digest_name_is_used_when_given():
+    empty = {"dv_uvm": [], "general": []}
+    html_out = render_html("2026-01-01", empty, CATEGORIES, [], digest_name="Cooking News Digest")
+    md_out = render_markdown("2026-01-01", empty, CATEGORIES, [], digest_name="Cooking News Digest")
+    assert "Cooking News Digest" in html_out
+    assert "Semiconductor" not in html_out
+    assert md_out.startswith("# Cooking News Digest —")

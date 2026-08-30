@@ -17,31 +17,84 @@ day's digest in [`digests/`](./digests).
 
 ## Using this for your own topic
 
-Nothing here is semiconductor-specific in how it works — only in
-`config/feeds.toml`'s content. To repurpose this for an entirely
-different field:
+Nothing here is semiconductor-specific in *how* it works — only in
+`config/feeds.toml`'s content. **You don't need to fork this repository
+to reuse it.**
 
-1. **Fork the repo.**
-2. **Rewrite `config/feeds.toml`**: swap the RSS/Atom feeds, arXiv
-   search queries, Hacker News search terms, and category
-   keywords/titles/blurbs for your topic. Nothing else needs to change —
-   see [Tuning the digest](#tuning-the-digest).
-3. **Set your own secrets and recipient**: follow
-   [Setting up email](#setting-up-email-required-one-time) with your own
-   sending account, and set the `DIGEST_RECIPIENT` repository variable to
-   your own address (falls back to this fork's original recipient if
-   unset — you want to change that).
-4. Optionally rename the workflow's `name:` fields and this README's
-   title/description if you want it to read as its own project rather
-   than a fork.
+### Recommended: no fork, no copied code
 
-No code changes needed for a new topic — if you find yourself editing
-`src/semiconductor_digest/` just to add a source, something's off; see
-[CONTRIBUTING.md](./CONTRIBUTING.md).
+This repo publishes itself as a reusable GitHub Actions workflow
+(`.github/workflows/digest-reusable.yml`). Any repo — new or existing,
+yours, unrelated to this one — can pull in the whole digest engine with
+one config file and a 12-line workflow:
+
+1. In **your own repo**, create `config/feeds.toml` — see
+   [Tuning the digest](#tuning-the-digest) for the schema, or hand the
+   schema to an AI agent (see [For AI agents](#for-ai-agents) below) and
+   describe your topic.
+2. Add `.github/workflows/digest.yml`:
+
+   ```yaml
+   name: Daily Digest
+   on:
+     schedule:
+       - cron: "0 12 * * *"
+     workflow_dispatch: {}
+   permissions:
+     contents: write
+   jobs:
+     digest:
+       uses: LPF9000/semiconductor-news/.github/workflows/digest-reusable.yml@v1
+       with:
+         recipient: ${{ vars.DIGEST_RECIPIENT }}
+       secrets:
+         MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+         MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+   ```
+
+3. In your repo's settings, set secrets `MAIL_USERNAME`/`MAIL_PASSWORD`
+   and variable `DIGEST_RECIPIENT` (same steps as
+   [Setting up email](#setting-up-email-required-one-time) below, just in
+   *your* repo), and flip **Workflow permissions** to "Read and write."
+
+That's the entire setup. Nothing to clone, no Python to install locally,
+no copy of `src/semiconductor_digest/` to keep in sync with this repo's
+own updates — `@v1` always installs this project's tagged release
+straight from GitHub at run time. This mirrors how a real GitHub Action
+is meant to be consumed (see
+[GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
+not a fork-and-diverge template.
+
+### Alternative: fork it
+
+Only do this if you want to change the *engine itself* (a new fetcher
+type, different classification/rendering logic) — see
+[CONTRIBUTING.md](./CONTRIBUTING.md). If you just want your own topic,
+forking means maintaining a permanent divergent copy of code you'll
+never actually need to touch; use the reusable workflow above instead.
+
+## For AI agents
+
+Working with an AI coding assistant (Claude Code, Cursor, Codex, Copilot,
+etc.)? This repo ships [AGENTS.md](./AGENTS.md) — machine-readable setup
+instructions following the [agents.md](https://agents.md) cross-tool
+convention, so your agent can read it directly rather than you having to
+paraphrase this README. A prompt like:
+
+> Set up a daily digest for **[your topic]** using the reusable workflow
+> from https://github.com/LPF9000/semiconductor-news (see its
+> `AGENTS.md`) in this repo. Sources: [any specific sites/feeds you
+> already know]. I want it emailed to **[your address]**.
+
+is enough for a capable agent to write `config/feeds.toml`, add the
+caller workflow, and tell you exactly which three settings to fill in in
+your repo (it can't set secrets for you — that's a manual step by
+design).
 
 ## Contents
 
 - [Using this for your own topic](#using-this-for-your-own-topic)
+- [For AI agents](#for-ai-agents)
 - [Setting up email (required, one-time)](#setting-up-email-required-one-time)
 - [How it works](#how-it-works)
 - [Repository layout](#repository-layout)
@@ -126,8 +179,12 @@ digests/YYYY-MM-DD.md      Archived copy of each day's digest
 state/seen.json            Cross-run dedupe cache
 digest_output/             Scratch dir for the HTML the email step sends (gitignored)
 uv.lock                    Locked, reproducible dependency versions (uv)
-.github/workflows/         CI and the daily digest/email workflow
-.github/actions/           Shared composite action used by both workflows
+AGENTS.md                  Setup instructions for AI coding agents (see "For AI agents")
+CLAUDE.md                  Pointer to AGENTS.md, for Claude Code specifically
+.github/workflows/ci.yml              PR checks + live preview email
+.github/workflows/daily-digest.yml    This repo's own scheduled run (local install)
+.github/workflows/digest-reusable.yml The reusable workflow external repos call (git install)
+.github/actions/           Composite action shared by ci.yml and daily-digest.yml
 ```
 
 `semiconductor_digest` is a proper installable Python package (not a
@@ -140,9 +197,13 @@ runs against mocked HTTP responses rather than live sources.
 
 Every pull request runs `.github/workflows/ci.yml`:
 
-1. **Lint & test** — `ruff check`, `ruff format --check`, `mypy`, and the
+1. **Lint GitHub Actions workflows** — [actionlint](https://github.com/rhysd/actionlint)
+   over every workflow file, catching real workflow bugs (bad expressions,
+   unknown contexts, shellcheck issues in `run:` blocks), not just YAML
+   syntax.
+2. **Lint & test** — `ruff check`, `ruff format --check`, `mypy`, and the
    `pytest` suite, on Python 3.11 and 3.12.
-2. **Build & email a preview digest** — runs the real pipeline against
+3. **Build & email a preview digest** — runs the real pipeline against
    live sources (no commit, no cache write, so it can't suppress or
    pollute tomorrow's real digest) and, if the mail secrets are
    configured, emails you the result prefixed `[PR Preview]` so you can
@@ -155,6 +216,11 @@ composite action (`.github/actions/setup-python-env`) to install the
 package via [uv](https://docs.astral.sh/uv/) from the committed
 `uv.lock`, so both workflows always set up their environment identically
 and reproducibly — no "works on my machine" dependency drift.
+`.github/workflows/digest-reusable.yml` is the third workflow in this
+repo — it's what external callers `uses:` (see
+["Using this for your own topic"](#using-this-for-your-own-topic)), not
+something this repo's own daily run calls into itself; the two are kept
+separate deliberately, see the comment at the top of that file for why.
 
 Dependencies are kept current automatically by
 [Dependabot](.github/dependabot.yml) (weekly, for both Python
@@ -170,6 +236,8 @@ it as a project dependency).
 Everything content-related lives in `config/feeds.toml` — no code changes
 needed:
 
+- Set `digest_name` (top-level key) to control the title shown in the
+  email header, archive header, and email subject line.
 - Add or remove an RSS feed under `[[rss_sources]]` (set
   `default_category` if a feed is already 100% on-topic, e.g. a pure
   crypto research feed).
