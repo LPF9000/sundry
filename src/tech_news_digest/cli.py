@@ -29,24 +29,24 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 EPILOG = """\
 examples:
   # Build today's digest using config/feeds.toml, exactly as the daily workflow does
-  semiconductor-digest
+  tech-news-digest
 
   # Preview a build without touching committed state (safe to run anytime)
-  semiconductor-digest --html-output /tmp/preview.html --no-write-cache --no-archive
+  tech-news-digest --html-output /tmp/preview.html --no-write-cache --no-archive
 
-  # Point at a config living somewhere else (e.g. a fork with its own topic)
-  semiconductor-digest --config path/to/feeds.toml
+  # Point at a config living somewhere else (e.g. a different topic)
+  tech-news-digest --config path/to/feeds.toml
 
 See config/feeds.toml to add sources/categories, or AGENTS.md if you're
 an AI agent setting this up for a new topic. Full docs: README.md.
 """
 
-logger = logging.getLogger("semiconductor_digest")
+logger = logging.getLogger("tech_news_digest")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="semiconductor-digest",
+        prog="tech-news-digest",
         description=__doc__,
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,

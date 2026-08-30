@@ -685,8 +685,8 @@ wheels = [
 ]
 
 [[package]]
-name = "semiconductor-digest"
-version = "0.1.0"
+name = "tech-news-digest"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "feedparser" },

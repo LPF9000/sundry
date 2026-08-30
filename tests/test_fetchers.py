@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from semiconductor_digest.fetchers.hackernews import fetch_hn_query
-from semiconductor_digest.fetchers.rss import fetch_rss
-from semiconductor_digest.models import RssSource
+from tech_news_digest.fetchers.hackernews import fetch_hn_query
+from tech_news_digest.fetchers.rss import fetch_rss
+from tech_news_digest.models import RssSource
 
 SAMPLE_RSS = b"""<?xml version="1.0"?>
 <rss version="2.0"><channel>

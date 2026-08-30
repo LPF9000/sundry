@@ -9,7 +9,7 @@ from typing import Any
 
 from ..models import Article
 
-USER_AGENT = "Mozilla/5.0 (compatible; semiconductor-news-digest/1.0; +https://github.com/lpf9000/semiconductor-news)"
+USER_AGENT = "Mozilla/5.0 (compatible; tech-news-digest/1.0; +https://github.com/lpf9000/tech-news-digest)"
 HTTP_TIMEOUT_SECONDS = 20
 
 

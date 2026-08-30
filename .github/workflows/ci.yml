@@ -47,7 +47,7 @@ jobs:
         run: uv run mypy src
 
       - name: Pytest
-        run: uv run pytest -v --cov=semiconductor_digest --cov-report=term-missing
+        run: uv run pytest -v --cov=tech_news_digest --cov-report=term-missing
 
   preview-digest:
     name: Build & email a preview digest
@@ -61,7 +61,7 @@ jobs:
 
       - name: Build digest (dry run — no commit, no cache write)
         run: |
-          uv run python -m semiconductor_digest \
+          uv run python -m tech_news_digest \
             --html-output digest_output/latest.html \
             --no-write-cache \
             --no-archive

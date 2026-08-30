@@ -24,7 +24,7 @@ body:
       label: How to reproduce
       description: >
         Ideally a command, e.g.
-        `uv run python -m semiconductor_digest --no-write-cache --no-archive`,
+        `uv run python -m tech_news_digest --no-write-cache --no-archive`,
         or a link to the failing GitHub Actions run.
     validations:
       required: false

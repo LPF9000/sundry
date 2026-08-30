@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from semiconductor_digest.config import ConfigError, load_config
+from tech_news_digest.config import ConfigError, load_config
 
 REPO_CONFIG = Path(__file__).resolve().parent.parent / "config" / "feeds.toml"
 

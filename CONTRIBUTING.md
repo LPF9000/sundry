@@ -46,7 +46,7 @@ If you touched `config/feeds.toml`, sanity-check it actually builds a
 digest from live sources without writing anything back to committed state:
 
 ```bash
-uv run python -m semiconductor_digest \
+uv run python -m tech_news_digest \
   --html-output /tmp/preview.html \
   --no-write-cache --no-archive
 ```
@@ -58,7 +58,7 @@ and commit the updated `uv.lock` alongside it.
 
 - **Small and scoped.** One source, one keyword fix, one bug — not a
   drive-by rewrite of something unrelated.
-- **Tests included** for anything in `src/semiconductor_digest/` — the
+- **Tests included** for anything in `src/tech_news_digest/` — the
   existing suite runs against mocked HTTP (see `tests/test_fetchers.py`
   for the pattern), never live network calls.
 - **No emoji, no AI-authorship attribution** in code, docs, or commit
