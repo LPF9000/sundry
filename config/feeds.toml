@@ -109,7 +109,7 @@ hn_queries = [
 
 [[categories]]
 key = "dv_uvm"
-title = "🧪 Design Verification, UVM & Formal"
+title = "Design Verification, UVM & Formal"
 blurb = """\
 Testbenches, coverage, assertions, formal methods, and everything that \
 keeps silicon honest before tapeout.\
@@ -142,7 +142,7 @@ keywords = [
 
 [[categories]]
 key = "rtl_design"
-title = "🛠️ RTL, HDLs, Architecture & EDA Flows"
+title = "RTL, HDLs, Architecture & EDA Flows"
 blurb = """\
 New RTL/architecture research, hardware-description-language updates and \
 newcomers, and the EDA tools/flows/automation reshaping the front-to-back \
@@ -190,7 +190,7 @@ keywords = [
 
 [[categories]]
 key = "mixed_signal"
-title = "📈 Mixed-Signal & Analog"
+title = "Mixed-Signal & Analog"
 blurb = """\
 Analog/mixed-signal IC design, data converters, PLLs, SerDes — where \
 digital verification meets the analog world.\
@@ -214,7 +214,7 @@ keywords = [
 
 [[categories]]
 key = "dft_packaging"
-title = "🔬 DFT, Test & Advanced Packaging"
+title = "DFT, Test & Advanced Packaging"
 blurb = """\
 Design-for-test, ATPG, scan/JTAG, and the chiplet / 2.5D-3D packaging \
 trends reshaping how SoCs get built and tested.\
@@ -238,7 +238,7 @@ keywords = [
 
 [[categories]]
 key = "crypto_security"
-title = "🔐 Cryptography & Hardware Security"
+title = "Cryptography & Hardware Security"
 blurb = """\
 Side-channel attacks, PUFs, root-of-trust, post-quantum crypto, and \
 hardware trojans — the security layer beneath the SoC.\
@@ -268,7 +268,7 @@ keywords = [
 
 [[categories]]
 key = "risc_v_proc"
-title = "⚙️ RISC-V & Processor Architecture"
+title = "RISC-V & Processor Architecture"
 blurb = """\
 New cores, microarchitecture, and instruction-set news across RISC-V and \
 general CPU/SoC architecture.\
@@ -290,7 +290,7 @@ keywords = [
 
 [[categories]]
 key = "conferences"
-title = "🎤 Conferences & Industry Events"
+title = "Conferences & Industry Events"
 blurb = """\
 DVCon, DAC, ISSCC, Hot Chips, CHES, and other venues where this stuff \
 gets presented first.\
@@ -312,7 +312,7 @@ keywords = [
 
 [[categories]]
 key = "general"
-title = "📰 General Semiconductor & Industry News"
+title = "General Semiconductor & Industry News"
 blurb = """\
 Broader chip-industry news — fabs, supply chain, market moves — for \
 context. Catch-all for anything that didn't match a topic above.\
