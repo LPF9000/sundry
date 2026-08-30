@@ -28,7 +28,10 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 
 EPILOG = """\
 examples:
-  # Build today's digest using config/feeds.toml, exactly as the daily workflow does
+  # Scaffold config/feeds.toml + a caller workflow in a new topic repo
+  tech-news-digest init
+
+  # Build today's digest using config/feeds.toml, exactly as a daily workflow does
   tech-news-digest
 
   # Preview a build without touching committed state (safe to run anytime)
@@ -37,8 +40,8 @@ examples:
   # Point at a config living somewhere else (e.g. a different topic)
   tech-news-digest --config path/to/feeds.toml
 
-See config/feeds.toml to add sources/categories, or AGENTS.md if you're
-an AI agent setting this up for a new topic. Full docs: README.md.
+Setting this up for a new topic? Run `tech-news-digest init` in that
+repo, or see AGENTS.md if you're an AI agent. Full docs: README.md.
 """
 
 logger = logging.getLogger("tech_news_digest")
@@ -125,6 +128,12 @@ def _log_summary(categorized: dict[str, list[Article]], config: DigestConfig, fa
 
 
 def main(argv: list[str] | None = None) -> int:
+    raw_argv = sys.argv[1:] if argv is None else argv
+    if raw_argv[:1] == ["init"]:
+        from .scaffold import run_init
+
+        return run_init(raw_argv[1:])
+
     args = parse_args(argv)
     logging.basicConfig(level=args.log_level, format="%(levelname)s %(name)s: %(message)s")
 

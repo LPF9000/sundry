@@ -62,6 +62,7 @@ jobs:
       - name: Build digest (dry run — no commit, no cache write)
         run: |
           uv run python -m tech_news_digest \
+            --config examples/feeds.toml \
             --html-output digest_output/latest.html \
             --no-write-cache \
             --no-archive
@@ -88,5 +89,5 @@ jobs:
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "[PR Preview] ${{ env.DIGEST_SUBJECT }} — #${{ github.event.pull_request.number }}"
           to: ${{ vars.DIGEST_RECIPIENT || 'bestasitis@gmail.com' }}
-          from: "Semiconductor News Bot <${{ secrets.MAIL_USERNAME }}>"
+          from: "Digest Bot <${{ secrets.MAIL_USERNAME }}>"
           html_body: file://digest_output/latest.html

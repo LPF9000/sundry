@@ -4,9 +4,12 @@ Fetches public RSS/Atom feeds, the arXiv API, and the Hacker News (Algolia)
 API; dedupes against a persisted seen-URL cache; classifies items into
 topic categories by keyword; and renders an HTML email plus a Markdown
 archive entry. See ``tech_news_digest.cli`` for the entry point and
-``config/feeds.toml`` (repo root) for source/category configuration — this
-repo ships pre-configured for semiconductor/design-verification news, but
-nothing in this package is topic-specific; repoint the config for any topic.
+``examples/feeds.toml`` for an annotated example of the source/category
+configuration this reads — nothing in this package is topic-specific,
+and this repo ships no default topic. Run ``tech-news-digest init`` in
+your own repo to scaffold one, or see
+https://github.com/LPF9000/semiconductor-news-digest for a complete
+real-world example.
 """
 
 from __future__ import annotations

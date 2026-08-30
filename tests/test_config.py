@@ -4,17 +4,17 @@ import pytest
 
 from tech_news_digest.config import ConfigError, load_config
 
-REPO_CONFIG = Path(__file__).resolve().parent.parent / "config" / "feeds.toml"
+EXAMPLE_CONFIG = Path(__file__).resolve().parent.parent / "examples" / "feeds.toml"
 
 
-def test_real_config_loads_and_has_a_general_category():
-    config = load_config(REPO_CONFIG)
+def test_example_config_loads_and_has_a_general_category():
+    config = load_config(EXAMPLE_CONFIG)
     keys = {category.key for category in config.categories}
     assert "general" in keys
     assert config.rss_sources
     assert config.arxiv_sources
     assert config.hn_queries
-    assert config.digest_name == "Semiconductor & DV Digest"
+    assert config.digest_name == "Example Digest"
 
 
 def test_digest_name_defaults_when_absent(tmp_path):
@@ -25,7 +25,7 @@ def test_digest_name_defaults_when_absent(tmp_path):
 
 
 def test_every_rss_default_category_is_a_real_category():
-    config = load_config(REPO_CONFIG)
+    config = load_config(EXAMPLE_CONFIG)
     category_keys = {category.key for category in config.categories}
     for source in config.rss_sources:
         if source.default_category:

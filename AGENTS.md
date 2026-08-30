@@ -11,11 +11,12 @@ Hacker News (Algolia) API → dedupe → classify into topic categories by
 keyword → render an HTML email + Markdown archive entry → email it, via a
 scheduled GitHub Actions workflow. The Python package
 (`src/tech_news_digest/`) is generic — it knows nothing about any
-particular topic. All topic-specific content (sources, categories,
-keywords) lives in one file: `config/feeds.toml`. This repo's own copy of
-that file is configured for semiconductor/design-verification news by
-default — that's just this instance's chosen topic, not a constraint on
-the tool.
+particular topic, and this repo ships no default topic of its own.
+All topic-specific content (sources, categories, keywords) lives in one
+file — `feeds.toml` — that lives in the *user's* repo, not here. See
+`examples/feeds.toml` for an annotated example, and
+[semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)
+for a complete real-world instance built on this engine.
 
 ## The most common task: set this up for a new topic
 
@@ -25,28 +26,18 @@ workflow this repo publishes instead — it lets their own repo pull in the
 digest engine without copying any Python code. Concretely:
 
 1. In the **user's own repo** (new or existing — it needs no relation to
-   this one), create `config/feeds.toml`. Use the schema below. This is
-   the only file you need to write.
-2. Create `.github/workflows/digest.yml` in their repo:
+   this one), run:
 
-   ```yaml
-   name: Daily Digest
-   on:
-     schedule:
-       - cron: "0 12 * * *"
-     workflow_dispatch: {}
-   permissions:
-     contents: write
-   jobs:
-     digest:
-       uses: LPF9000/tech-news-digest/.github/workflows/digest-reusable.yml@v2.0.0
-       with:
-         recipient: ${{ vars.DIGEST_RECIPIENT }}
-       secrets:
-         MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
-         MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+   ```bash
+   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
    ```
 
+   This writes `config/feeds.toml` and `.github/workflows/digest.yml`
+   there, already wired up correctly — nothing to hand-write, no paths to
+   get wrong. It prints the exact next steps below when it runs.
+2. Fill in the TODOs it left in `config/feeds.toml` for the user's topic
+   — use the schema reference below, or just do it yourself from their
+   description of the topic and any sources/keywords they mention.
 3. Tell the user to set three things in their repo's GitHub settings —
    this is the only manual step, you cannot do it for them:
    - Secrets `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an
@@ -137,10 +128,12 @@ reason (missing categories, no `general` key, an unknown
   plain, concise, describing *what changed and why* (the intent). Don't
   narrate your own process, don't reference or quote the request that
   prompted the change.
-- **Source/category data belongs in `config/feeds.toml`, never in
-  `src/`.** If a task seems to require editing `src/tech_news_digest/`
-  just to add a source or keyword, something is wrong — stop and
-  reconsider; see "set this up for a new topic" above.
+- **Source/category data belongs in a `feeds.toml`, never in `src/`.**
+  If a task seems to require editing `src/tech_news_digest/` just to add
+  a source or keyword, something is wrong — stop and reconsider; see
+  "set this up for a new topic" above. This repo's own `examples/`
+  holds a schema demo, not a real topic — a real topic's config lives in
+  the user's own repo, not here.
 - **Keep secrets out of committed files and logs.** Nothing in this repo
   should ever need a secret to run a dry build (`--no-write-cache
   --no-archive` needs no credentials at all).

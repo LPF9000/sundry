@@ -1,0 +1,52 @@
+# Example config/feeds.toml — demonstrates the schema this engine reads.
+# This repo is the engine only and ships no default topic; point it at a
+# real subject by writing a file like this one in your own repo and
+# passing it via --config (or a caller workflow's config-path input).
+#
+# For a complete, real-world example built on this engine, see
+# https://github.com/LPF9000/semiconductor-news-digest.
+
+# --- Top-level settings ---------------------------------------------------
+# NOTE: top-level keys like these must stay above the first `[[...]]`
+# array-of-tables header below — TOML attaches bare `key = value` lines to
+# whichever table was most recently opened, not to the document root.
+
+digest_name = "Example Digest"
+
+# --- Hacker News (Algolia public API, no key needed) ----------------------
+
+hn_queries = [
+  "open source",
+]
+
+# --- Plain RSS/Atom feeds --------------------------------------------------
+
+[[rss_sources]]
+name = "Hacker News – Front Page"
+url = "https://hnrss.org/frontpage"
+
+# --- arXiv (public API, no key needed) -------------------------------------
+
+[[arxiv_sources]]
+name = "arXiv cs.AI (Artificial Intelligence)"
+query = "cat:cs.AI"
+max_results = 10
+
+# --- Categories, in display order ------------------------------------------
+# `keywords` are matched case-insensitively as substrings against each
+# item's title + summary. Title matches count double. Highest score wins;
+# ties/no-match fall through to `general`.
+
+[[categories]]
+key = "highlights"
+title = "Highlights"
+blurb = "Items matching this example category's keywords."
+max_items = 5
+keywords = ["open source", "release"]
+
+[[categories]]
+key = "general"
+title = "General"
+blurb = "Catch-all for anything that didn't match a topic above."
+max_items = 5
+keywords = []
