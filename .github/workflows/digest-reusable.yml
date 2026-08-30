@@ -2,17 +2,15 @@ name: Reusable Digest Builder
 
 # Lets ANY repo build and email a digest with this engine, without
 # forking or copying any Python code — see AGENTS.md / README.md
-# "Using this without forking" for the 4-line caller workflow. This
-# checks out and commits back to the CALLING repo; the digest engine
-# itself is installed straight from this repo's git history at
-# `inputs.digest-ref`, pinned to a release tag by default for stability.
+# "Using this without forking" for the 4-line caller workflow (or run
+# `tech-news-digest init` in that repo to generate it). This checks out
+# and commits back to the CALLING repo; the digest engine itself is
+# installed straight from this repo's git history at `inputs.digest-ref`,
+# pinned to a release tag by default for stability.
 #
-# This repo's own daily-digest.yml deliberately does NOT call this
-# workflow — it installs locally from the committed uv.lock instead, so
-# this repo's own production run is pinned to exact, reproducible
-# dependency versions rather than resolved fresh from a git install.
-# External callers get the simpler (and still safe, since it's pinned to
-# a tag) git-install path.
+# This repo ships no topic of its own — its own CI (ci.yml) builds
+# `examples/feeds.toml` directly from the committed uv.lock to test the
+# engine, rather than calling this workflow on itself.
 
 on:
   workflow_call:

@@ -5,11 +5,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        Want a new *topic* covered for your own use (not this repo's
-        default semiconductor/DV topic)? You don't need an issue for
-        that, and you don't need to fork either — see the README's
-        "Using this for your own topic" section. This form is for
-        changes to the tool itself.
+        Want a digest for your own topic? You don't need an issue for
+        that, and you don't need to fork either — run `tech-news-digest
+        init` in your own repo, or see the README's "Using this for your
+        own topic" section. This form is for changes to the tool itself.
 
   - type: textarea
     id: what
@@ -31,11 +30,9 @@ body:
     attributes:
       label: What kind of change is this
       options:
-        - New RSS/Atom source
-        - New arXiv or Hacker News search
-        - New or reweighted category in config/feeds.toml
         - New fetcher type (a source that isn't RSS/arXiv/HN)
         - Change to classification/dedupe/rendering logic
+        - Change to `tech-news-digest init` scaffolding
         - Something else
     validations:
       required: true
