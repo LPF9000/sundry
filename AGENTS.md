@@ -21,36 +21,63 @@ for a complete real-world instance built on this engine.
 ## The most common task: set this up for a new topic
 
 If a user asks you to "make a daily digest about X using this," **do not
-fork this repository.** Point them at the reusable GitHub Actions
-workflow this repo publishes instead — it lets their own repo pull in the
-digest engine without copying any Python code. Concretely:
+fork this repository, and do not clone or edit anything in this
+repository to do it.** Everything below happens in the **user's own
+repo** — new or existing, unrelated to this one. The only legitimate
+reason to have a checkout of *this* repo open at all is to read this
+file or README.md; `tech-news-digest init` and the reusable workflow it
+sets up both install the engine straight from GitHub at run time (via
+`uvx` and `uses:` respectively), so nothing here ever needs a local
+checkout, and nothing in `src/`, `examples/`, or this repo's own config
+should be touched as part of this task. Concretely:
 
-1. In the **user's own repo** (new or existing — it needs no relation to
-   this one), run:
+1. **In the user's own repo** (this is where you run the command, and
+   where every file below gets created — not here), run:
 
    ```bash
    uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
    ```
 
-   This writes `config/feeds.toml` and `.github/workflows/digest.yml`
-   there, already wired up correctly — nothing to hand-write, no paths to
-   get wrong. It prints the exact next steps below when it runs.
-2. Fill in the TODOs it left in `config/feeds.toml` for the user's topic
-   — use the schema reference below, or just do it yourself from their
-   description of the topic and any sources/keywords they mention.
-3. Tell the user to set three things in their repo's GitHub settings —
+   This writes `config/feeds.toml` and `.github/workflows/digest.yml` in
+   the **current directory** — wherever you ran it — already wired up
+   correctly. It prints the exact next steps when it runs.
+2. Fill in the TODOs it left in that repo's `config/feeds.toml` for the
+   user's topic — use the schema reference below, or just do it yourself
+   from their description of the topic and any sources/keywords they
+   mention. Edit that file in place; there is nothing to write in this
+   repo.
+3. Validate it builds, still using `uvx` (no local install, no checkout
+   of this repo needed):
+
+   ```bash
+   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" \
+     tech-news-digest --config config/feeds.toml \
+     --html-output /tmp/preview.html --no-write-cache --no-archive
+   ```
+
+   A `FileNotFoundError`/`ConfigError` prints a clear, actionable reason
+   (missing categories, no `general` key, an unknown `default_category`,
+   etc.) — read it before telling the user it's done.
+4. Want a different send time or frequency than the daily-at-noon-UTC
+   default? Edit the `cron` line in that repo's
+   `.github/workflows/digest.yml` — e.g. `"0 8 * * *"` for 08:00 UTC,
+   `"0 */6 * * *"` for every 6 hours, `"0 12 * * 1-5"` for weekdays only.
+   GitHub Actions cron is always UTC; the dedupe window (~45 days) works
+   fine at any frequency.
+5. Tell the user to set three things in their repo's GitHub settings —
    this is the only manual step, you cannot do it for them:
    - Secrets `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an
      [App Password](https://myaccount.google.com/apppasswords))
    - Variable `DIGEST_RECIPIENT` (who receives the email)
    - **Settings > Actions > General > Workflow permissions** → "Read and
      write permissions" (so it can commit the daily archive)
-4. That's the entire setup. No `pip install`, no cloning this repo, no
+6. That's the entire setup. No `pip install`, no cloning this repo, no
    copying `src/`. The reusable workflow installs the digest engine
    straight from this repo's tagged release at run time.
 
 If the user instead wants to **modify the engine itself** (a new fetcher
-type, different classification logic), *then* forking is correct — see
+type, different classification logic) — the one case that *does* mean
+working in this repo — forking is correct; see
 [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## `config/feeds.toml` schema
@@ -100,20 +127,8 @@ keywords = [
 ]
 ```
 
-Validate a new config actually builds something before telling the user
-it's done:
-
-```bash
-uv sync --extra dev
-uv run python -m tech_news_digest \
-  --config config/feeds.toml \
-  --html-output /tmp/preview.html \
-  --no-write-cache --no-archive
-```
-
-A `FileNotFoundError`/`ConfigError` from that command prints a clear
-reason (missing categories, no `general` key, an unknown
-`default_category`, etc.) — read it, it's written to be actionable.
+See step 3 above for how to validate a new config without cloning
+anything.
 
 ## Conventions to respect in this repo
 

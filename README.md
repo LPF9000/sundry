@@ -75,10 +75,12 @@ paraphrase this README. A prompt like:
 > in this repo. Sources: [any specific sites/feeds you already know]. I
 > want it emailed to **[your address]**.
 
-is enough for a capable agent to run `tech-news-digest init`, fill in
+is enough for a capable agent to run `tech-news-digest init` (via `uvx`
+— no cloning this repo, just reading its `AGENTS.md`), fill in
 `config/feeds.toml` for your topic, and tell you exactly which three
 settings to fill in in your repo (it can't set secrets for you — that's
-a manual step by design).
+a manual step by design). Every file it creates or edits lands in
+*your* repo, not this one.
 
 ## Contents
 
@@ -238,8 +240,12 @@ changes needed:
 - Add, remove, or reweight a category (`title`, `blurb`, `max_items`,
   `keywords`) under `[[categories]]`.
 
-Change the send time by editing the `cron` line in your repo's
-`.github/workflows/digest.yml` (always UTC).
+Change the send time *or* how often it runs by editing the `cron` line
+in your repo's `.github/workflows/digest.yml` — it's a standard 5-field
+cron expression, always in UTC: `"0 8 * * *"` for once daily at 08:00
+UTC, `"0 */6 * * *"` for every 6 hours, `"0 12 * * 1-5"` for weekdays
+only, and so on. The ~45-day dedupe window works the same regardless of
+how often you run it.
 
 ## Local development
 

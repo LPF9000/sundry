@@ -80,6 +80,9 @@ name: Daily Digest
 
 on:
   schedule:
+    # Once daily at 12:00 UTC. Change the time or frequency here — always
+    # UTC, standard 5-field cron: e.g. "0 8 * * *" for 08:00 UTC,
+    # "0 */6 * * *" for every 6 hours, "0 12 * * 1-5" for weekdays only.
     - cron: "0 12 * * *"
   workflow_dispatch: {{}}
 
@@ -97,6 +100,10 @@ jobs:
 """
 
 NEXT_STEPS = """\
+Both files were created in *this* repo (the one you ran this command
+in), not in tech-news-digest itself — nothing there needs cloning or
+editing.
+
 Next steps:
 
 1. Fill in the TODOs in {config_path} — either by hand, or by handing the
@@ -120,7 +127,9 @@ Next steps:
      write permissions" (so the workflow can commit each day's archive)
 
 3. Commit and push {config_path} and {workflow_path}. The workflow runs
-   daily at 12:00 UTC, or on demand from the Actions tab.
+   daily at 12:00 UTC, or on demand from the Actions tab — edit the
+   `cron` line in {workflow_path} for a different time or frequency
+   (see the comment above it).
 """
 
 
