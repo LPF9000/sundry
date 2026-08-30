@@ -1,0 +1,83 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-test:
+    name: Lint & test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python-env
+        with:
+          extras: dev
+          python-version: ${{ matrix.python-version }}
+
+      - name: Ruff (lint)
+        run: ruff check .
+
+      - name: Ruff (format check)
+        run: ruff format --check .
+
+      - name: Mypy
+        run: mypy src
+
+      - name: Pytest
+        run: pytest -v --cov=semiconductor_digest --cov-report=term-missing
+
+  preview-digest:
+    name: Build & email a preview digest
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-python-env
+
+      - name: Build digest (dry run — no commit, no cache write)
+        run: |
+          python -m semiconductor_digest \
+            --html-output digest_output/latest.html \
+            --no-write-cache \
+            --no-archive
+
+      - name: Check mail secrets are configured
+        id: mail_check
+        run: |
+          if [ -n "${{ secrets.MAIL_USERNAME }}" ] && [ -n "${{ secrets.MAIL_PASSWORD }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::MAIL_USERNAME/MAIL_PASSWORD secrets aren't set yet, so this PR can't " \
+                 "send a preview email. See README.md for setup steps; the digest still built " \
+                 "successfully above."
+          fi
+
+      - name: Send preview email
+        if: steps.mail_check.outputs.configured == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[PR Preview] ${{ env.DIGEST_SUBJECT }} — #${{ github.event.pull_request.number }}"
+          to: bestasitis@gmail.com
+          from: "Semiconductor News Bot <${{ secrets.MAIL_USERNAME }}>"
+          html_body: file://digest_output/latest.html
