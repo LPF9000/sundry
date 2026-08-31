@@ -9,7 +9,7 @@ import requests
 
 from ..models import Article, RssSource
 from ..text import strip_html, truncate
-from .common import HTTP_TIMEOUT_SECONDS, FetchOutcome, entry_datetime
+from .common import FetchOutcome, entry_datetime, request_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +20,10 @@ def fetch_rss(source: RssSource, session: requests.Session) -> FetchOutcome:
     Fetching ourselves (rather than letting feedparser do its own HTTP)
     lets us send a browser-like User-Agent and raise on non-2xx responses
     explicitly — several trade/news sites block feedparser's bare
-    default UA.
+    default UA. Transient failures are retried; see `request_with_retries`.
     """
     try:
-        response = session.get(source.url, timeout=HTTP_TIMEOUT_SECONDS)
-        response.raise_for_status()
+        response = request_with_retries(session, source.url)
     except requests.RequestException as exc:
         logger.warning("RSS fetch failed for %s: %s", source.name, exc)
         return FetchOutcome(source.name, error=exc.__class__.__name__)

@@ -480,6 +480,8 @@ a dev environment, run the checks, and open a PR. This project follows
 the [Contributor Covenant](./CODE_OF_CONDUCT.md). Found a security issue?
 See [SECURITY.md](./SECURITY.md) rather than a public issue.
 
+See [CHANGELOG.md](./CHANGELOG.md) for what's changed release to release.
+
 ## License
 
 [MIT](./LICENSE) — use, fork, and modify freely.

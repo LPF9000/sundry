@@ -12,11 +12,14 @@ import requests
 
 from ..models import Article, ArxivSource
 from ..text import strip_html, truncate
-from .common import HTTP_TIMEOUT_SECONDS, FetchOutcome, entry_datetime
+from .common import FetchOutcome, entry_datetime, request_with_retries
 
 logger = logging.getLogger(__name__)
 
-ARXIV_API_URL = "http://export.arxiv.org/api/query"
+# https, not http: plain HTTP to this host is unreliable through some
+# network paths (proxies/firewalls that only pass HTTPS) and offers no
+# integrity guarantee over what a public API returns either way.
+ARXIV_API_URL = "https://export.arxiv.org/api/query"
 # arXiv's API terms of use ask for a short pause between consecutive requests.
 COURTESY_DELAY_SECONDS = 3.0
 
@@ -28,8 +31,7 @@ def fetch_arxiv(source: ArxivSource, session: requests.Session, *, delay: bool =
         f"&sortBy=submittedDate&sortOrder=descending&max_results={source.max_results}"
     )
     try:
-        response = session.get(url, timeout=HTTP_TIMEOUT_SECONDS)
-        response.raise_for_status()
+        response = request_with_retries(session, url)
     except requests.RequestException as exc:
         logger.warning("arXiv fetch failed for %s: %s", source.name, exc)
         return FetchOutcome(source.name, error=exc.__class__.__name__)
