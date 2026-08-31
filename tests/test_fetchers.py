@@ -8,10 +8,10 @@ import pytest
 import requests
 from requests.exceptions import ConnectionError as RequestsConnectionError
 
-from tech_news_digest.fetchers.common import request_with_retries
-from tech_news_digest.fetchers.hackernews import fetch_hn_query
-from tech_news_digest.fetchers.rss import fetch_rss
-from tech_news_digest.models import RssSource
+from sundry.fetchers.common import request_with_retries
+from sundry.fetchers.hackernews import fetch_hn_query
+from sundry.fetchers.rss import fetch_rss
+from sundry.models import RssSource
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +19,7 @@ def _no_real_sleep(monkeypatch):
     """Retries add real backoff delay by design (see request_with_retries) --
     patched out here so the failure-path tests below don't slow down the
     suite waiting on sleeps that are irrelevant to what they're checking."""
-    monkeypatch.setattr("tech_news_digest.fetchers.common.time.sleep", lambda _seconds: None)
+    monkeypatch.setattr("sundry.fetchers.common.time.sleep", lambda _seconds: None)
 
 
 SAMPLE_RSS = b"""<?xml version="1.0"?>

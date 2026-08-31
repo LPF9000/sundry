@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tech_news_digest.cli import main, parse_args
-from tech_news_digest.mailer import MailError
+from sundry.cli import main, parse_args
+from sundry.mailer import MailError
 
 # A minimal but valid config with zero sources — build_digest/fetch_all
 # make no network calls at all with nothing configured to fetch (see
@@ -32,7 +32,7 @@ def test_version_flag_exits_cleanly(capsys):
     with pytest.raises(SystemExit) as exc_info:
         parse_args(["--version"])
     assert exc_info.value.code == 0
-    assert "tech-news-digest" in capsys.readouterr().out
+    assert "sundry" in capsys.readouterr().out
 
 
 def test_help_flag_exits_cleanly():
@@ -55,7 +55,7 @@ def test_log_level_is_case_insensitive():
 
 def test_missing_config_file_exits_cleanly_without_a_traceback(tmp_path, caplog):
     missing = tmp_path / "does-not-exist.toml"
-    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
+    with caplog.at_level(logging.ERROR, logger="sundry"):
         exit_code = main(["--config", str(missing)])
     assert exit_code == 1
     assert "Config file not found" in caplog.text
@@ -65,7 +65,7 @@ def test_missing_config_file_exits_cleanly_without_a_traceback(tmp_path, caplog)
 def test_invalid_config_exits_cleanly_without_a_traceback(tmp_path, caplog):
     bad = tmp_path / "feeds.toml"
     bad.write_text('[[categories]]\nkey = "foo"\ntitle = "Foo"\n', encoding="utf-8")  # missing 'general'
-    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
+    with caplog.at_level(logging.ERROR, logger="sundry"):
         exit_code = main(["--config", str(bad)])
     assert exit_code == 1
     assert "Invalid config" in caplog.text
@@ -76,7 +76,7 @@ def test_send_email_requires_mail_credentials(empty_config, monkeypatch, tmp_pat
     monkeypatch.delenv("MAIL_USERNAME", raising=False)
     monkeypatch.delenv("MAIL_PASSWORD", raising=False)
     html_output = tmp_path / "out.html"
-    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
+    with caplog.at_level(logging.ERROR, logger="sundry"):
         exit_code = main(
             ["--config", str(empty_config), "--html-output", str(html_output), "--send-email", "--no-archive"]
         )
@@ -91,7 +91,7 @@ def test_send_email_requires_a_recipient(empty_config, monkeypatch, tmp_path, ca
     monkeypatch.setenv("MAIL_PASSWORD", "app-password")
     monkeypatch.delenv("DIGEST_RECIPIENT", raising=False)
     html_output = tmp_path / "out.html"
-    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
+    with caplog.at_level(logging.ERROR, logger="sundry"):
         exit_code = main(
             ["--config", str(empty_config), "--html-output", str(html_output), "--send-email", "--no-archive"]
         )
@@ -104,7 +104,7 @@ def test_send_email_sends_with_recipient_flag_and_subject(empty_config, monkeypa
     monkeypatch.setenv("MAIL_USERNAME", "bot@example.com")
     monkeypatch.setenv("MAIL_PASSWORD", "app-password")
     send_mock = MagicMock()
-    monkeypatch.setattr("tech_news_digest.cli.send_digest_email", send_mock)
+    monkeypatch.setattr("sundry.cli.send_digest_email", send_mock)
 
     exit_code = main(
         [
@@ -137,7 +137,7 @@ def test_send_email_falls_back_to_digest_recipient_env_var(empty_config, monkeyp
     monkeypatch.setenv("MAIL_PASSWORD", "app-password")
     monkeypatch.setenv("DIGEST_RECIPIENT", "team@example.com")
     send_mock = MagicMock()
-    monkeypatch.setattr("tech_news_digest.cli.send_digest_email", send_mock)
+    monkeypatch.setattr("sundry.cli.send_digest_email", send_mock)
 
     exit_code = main(
         [
@@ -159,11 +159,11 @@ def test_send_email_failure_exits_cleanly_without_a_traceback(empty_config, monk
     monkeypatch.setenv("MAIL_USERNAME", "bot@example.com")
     monkeypatch.setenv("MAIL_PASSWORD", "app-password")
     monkeypatch.setattr(
-        "tech_news_digest.cli.send_digest_email",
+        "sundry.cli.send_digest_email",
         MagicMock(side_effect=MailError("Failed to send digest email via smtp.gmail.com:465 — boom")),
     )
 
-    with caplog.at_level(logging.ERROR, logger="tech_news_digest"):
+    with caplog.at_level(logging.ERROR, logger="sundry"):
         exit_code = main(
             [
                 "--config",
@@ -186,7 +186,7 @@ def test_send_email_failure_exits_cleanly_without_a_traceback(empty_config, monk
 def test_plain_build_never_sends_email(empty_config, monkeypatch, tmp_path):
     """--send-email is opt-in — a plain build must never have this side effect."""
     send_mock = MagicMock()
-    monkeypatch.setattr("tech_news_digest.cli.send_digest_email", send_mock)
+    monkeypatch.setattr("sundry.cli.send_digest_email", send_mock)
 
     exit_code = main(
         ["--config", str(empty_config), "--html-output", str(tmp_path / "out.html"), "--no-archive", "--no-write-cache"]

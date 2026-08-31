@@ -3,7 +3,7 @@ name: Reusable Digest Builder
 # Lets ANY repo build and email a digest with this engine, without
 # forking or copying any Python code — see AGENTS.md / README.md
 # "Using this without forking" for the 4-line caller workflow (or run
-# `tech-news-digest init` in that repo to generate it). This checks out
+# `sundry init` in that repo to generate it). This checks out
 # and commits back to the CALLING repo; the digest engine itself is
 # installed straight from this repo's git history at `inputs.digest-ref`,
 # `main` by default — this project doesn't do formal releases, so the
@@ -29,13 +29,13 @@ on:
         default: config/feeds.toml
       digest-ref:
         description: >
-          Git ref of LPF9000/tech-news-digest to install the digest
+          Git ref of LPF9000/sundry to install the digest
           engine from. Defaults to "main" — this project doesn't cut
           formal releases, so tracking main is the documented, tested
           path. Override with a tag or commit SHA if you'd rather pin
           against upstream changes, but it must be recent enough to
           support the CLI flags this workflow passes it — at minimum
-          v2.0.0 (earlier tags predate the tech-news-digest rename) and,
+          v2.0.0 (earlier tags predate the sundry rename) and,
           as of the engine sending its own email, past the commit that
           added --send-email; an older pin fails with an "unrecognized
           arguments" error rather than silently misbehaving.
@@ -104,8 +104,8 @@ jobs:
           MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
           DIGEST_RECIPIENT: ${{ inputs.recipient || secrets.DIGEST_RECIPIENT }}
         run: |
-          uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@${{ inputs.digest-ref }}" \
-            tech-news-digest --config "${{ inputs.config-path }}" \
+          uvx --from "git+https://github.com/LPF9000/sundry.git@${{ inputs.digest-ref }}" \
+            sundry --config "${{ inputs.config-path }}" \
             --send-email \
             --mail-server "${{ inputs.mail-server }}" \
             --mail-port "${{ inputs.mail-port }}" \

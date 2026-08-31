@@ -1,5 +1,5 @@
-from tech_news_digest.classify import classify
-from tech_news_digest.models import Article, Category
+from sundry.classify import classify
+from sundry.models import Article, Category
 
 CATEGORIES = (
     Category(key="dv_uvm", title="DV", blurb="", keywords=("uvm", "formal verification"), max_items=8),

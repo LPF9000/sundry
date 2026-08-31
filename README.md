@@ -1,6 +1,6 @@
-# tech-news-digest
+# Sundry
 
-[![CI](https://github.com/LPF9000/tech-news-digest/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/tech-news-digest/actions/workflows/ci.yml)
+[![CI](https://github.com/LPF9000/sundry/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/sundry/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 A self-hosted intelligence pipeline for monitoring a niche — think less
@@ -114,7 +114,7 @@ cd my-news-digest
 git clone https://github.com/<your-username>/my-news-digest.git
 cd my-news-digest
 
-uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
+uvx --from "git+https://github.com/LPF9000/sundry.git@main" sundry init
 ```
 
 This creates 5 files here, already wired up: `config/feeds.toml`, two
@@ -201,16 +201,16 @@ the day — logged, and named at the bottom of the email — rather than
 failing the whole run. Nothing here needs to be babysat.
 
 **How your repo gets the engine, without a copy of it.** Both
-`tech-news-digest init` and the daily run itself install the engine
+`sundry init` and the daily run itself install the engine
 straight from this repo's git history at run time, rather than copying
 any of its code into your repo:
 
-- `uvx --from "git+URL" tech-news-digest init` fetches this repo into
+- `uvx --from "git+URL" sundry init` fetches this repo into
   `uv`'s own cache, builds and runs the tool from there, and exits —
-  nothing of tech-news-digest's source, tests, or git history ends up
+  nothing of Sundry's source, tests, or git history ends up
   in your repo, only the files `init` explicitly writes.
 - Your `digest.yml`'s
-  `uses: LPF9000/tech-news-digest/.github/workflows/digest-reusable.yml@main`
+  `uses: LPF9000/sundry/.github/workflows/digest-reusable.yml@main`
   line tells GitHub Actions to pull in that workflow's steps at run
   time, the same way, on GitHub's own runner.
 
@@ -261,11 +261,11 @@ convention, so your agent can read it directly rather than you having to
 paraphrase this README. A prompt like:
 
 > Set up a daily digest for **[your topic]** using the reusable workflow
-> from https://github.com/LPF9000/tech-news-digest (see its `AGENTS.md`)
+> from https://github.com/LPF9000/sundry (see its `AGENTS.md`)
 > in this repo. Sources: [any specific sites/feeds you already know]. I
 > want it emailed to **[your address]**.
 
-is enough for a capable agent to run `tech-news-digest init` (via `uvx`
+is enough for a capable agent to run `sundry init` (via `uvx`
 — no cloning this repo, just reading its `AGENTS.md`), fill in
 `config/feeds.toml` for your topic, and tell you exactly which three
 settings to fill in in your repo (it can't set secrets for you — that's
@@ -284,7 +284,7 @@ This only works if the agent is actually **opened rooted at your repo**
 pointed at that folder. `AGENTS.md`/`CLAUDE.md` auto-load based on the
 working directory a session starts in, not a global setting or
 something carried over from a previous session — an agent still open in
-a different project, or in a checkout of tech-news-digest itself, won't
+a different project, or in a checkout of Sundry itself, won't
 see them.
 
 ## Setting up email (required, one-time)
@@ -311,7 +311,7 @@ are the same address).
    commit each day's archive file back to the repository.
 4. That's it. In a repo using the reusable workflow, the schedule runs at
    whatever cron the caller workflow sets (`0 12 * * *` — 12:00 UTC — by
-   default from `tech-news-digest init`); you can also trigger it on
+   default from `sundry init`); you can also trigger it on
    demand from the **Actions** tab, which is the fastest way to confirm
    everything is wired up correctly.
 
@@ -351,13 +351,13 @@ step's log. The error there is almost always one of these:
 | Digest email is basically empty on day one | Expected — see [Operational notes](#operational-notes) | Nothing to fix; from day two onward it's a real daily delta |
 | `ConfigError: ... a 'general' catch-all category is required` | `config/feeds.toml` is missing a category with `key = "general"` | Add one — see the schema in [Tuning the digest](#tuning-the-digest) |
 
-Still stuck? [Open an issue](https://github.com/LPF9000/tech-news-digest/issues)
+Still stuck? [Open an issue](https://github.com/LPF9000/sundry/issues)
 with the failed step's log.
 
 ## Repository layout
 
 ```
-src/tech_news_digest/      The digest package (fetch, classify, render, CLI, scaffold)
+src/sundry/      The digest package (fetch, classify, render, CLI, scaffold)
 examples/feeds.toml        Real semiconductor/DV config, used only to exercise CI end to end
 tests/                     Unit tests (mocked HTTP — no live network calls)
 digest_output/             Scratch dir for the HTML the email step sends (gitignored)
@@ -387,7 +387,7 @@ gets its own `config/feeds.toml`, `.github/workflows/digest.yml`,
 `digests/YYYY-MM-DD.md` archive, and `state/seen.json` dedupe cache —
 none of that lives in this repo.
 
-`tech_news_digest` is a proper installable Python package (not a loose
+`sundry` is a proper installable Python package (not a loose
 script): typed with dataclasses and `from __future__ import annotations`
 throughout, one module per concern (`fetchers/`, `classify`, `cache`,
 `render`, `config`, `cli`), and covered by a unit test suite that runs
@@ -405,7 +405,7 @@ Every pull request runs `.github/workflows/ci.yml`:
    over the full git history, not just the current diff. Run as the raw
    CLI via its official Docker image, not the `gitleaks-action` wrapper —
    the wrapper needs a paid license for organization-owned repos, the
-   underlying CLI (Apache-2.0) never does. Same job `tech-news-digest
+   underlying CLI (Apache-2.0) never does. Same job `sundry
    init` scaffolds into every topic repo; see
    [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo).
 3. **Lint & test** — `ruff check`, `ruff format --check`, `mypy`, and the
@@ -442,7 +442,7 @@ it as a project dependency).
 
 ## Continuous integration for your topic repo
 
-`tech-news-digest init` (see [Using this for your own topic](#using-this-for-your-own-topic))
+`sundry init` (see [Using this for your own topic](#using-this-for-your-own-topic))
 also writes `.github/workflows/ci.yml` into your repo — not just
 `config/feeds.toml` and the scheduled `digest.yml`. It runs on every
 push/PR from day one, no setup beyond what `init` already did:
@@ -475,7 +475,7 @@ a "Cooking Digest." Skip this section entirely if you're using an AI
 agent (see [For AI agents](#for-ai-agents)); it already knows all of this.
 
 **The file itself explains as you go.** `config/feeds.toml`, once
-`tech-news-digest init` has created it, has the same walkthrough built
+`sundry init` has created it, has the same walkthrough built
 right in as comments (lines starting with `#`) — this section just says
 it a second way, with a worked example.
 
@@ -544,8 +544,8 @@ category — copy the whole block, don't just add one line.
 **Check your work** before pushing, from a terminal in this repo:
 
 ```bash
-uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" \
-  tech-news-digest --config config/feeds.toml \
+uvx --from "git+https://github.com/LPF9000/sundry.git@main" \
+  sundry --config config/feeds.toml \
   --html-output /tmp/preview.html --no-write-cache --no-archive
 ```
 
@@ -596,13 +596,13 @@ uv run ruff format .             # format
 uv run mypy src                  # type-check
 uv run pytest                    # unit tests (mocked HTTP, no network needed)
 
-uv run python -m tech_news_digest --help   # see all CLI flags
-uv run python -m tech_news_digest \
+uv run python -m sundry --help   # see all CLI flags
+uv run python -m sundry \
   --config examples/feeds.toml \
   --html-output /tmp/preview.html \
   --no-write-cache --no-archive            # build a preview without touching repo state
 
-uv run python -m tech_news_digest init /tmp/some-other-repo  # try the scaffolder
+uv run python -m sundry init /tmp/some-other-repo  # try the scaffolder
 ```
 
 Added or changed a dependency in `pyproject.toml`? Run `uv lock` and

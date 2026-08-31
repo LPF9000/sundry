@@ -1,4 +1,4 @@
-from tech_news_digest.text import strip_html, truncate
+from sundry.text import strip_html, truncate
 
 
 def test_strip_html_removes_tags_and_unescapes_entities():

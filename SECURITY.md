@@ -24,7 +24,7 @@ report categories:
 - A way for a fetched source's content to execute code, rather than just
   being rendered as inert text in the digest (e.g. HTML/script injection
   into the email or Markdown archive that survives the escaping in
-  `tech_news_digest/render.py`).
+  `sundry/render.py`).
 - Supply-chain concerns in `uv.lock` / `pyproject.toml` (a pinned
   dependency with a known CVE, an unpinned/floating Action version).
 

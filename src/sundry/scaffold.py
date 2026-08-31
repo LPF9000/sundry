@@ -1,8 +1,8 @@
-"""`tech-news-digest init`: scaffold a new topic repo's config + workflows.
+"""`sundry init`: scaffold a new topic repo's config + workflows.
 
 Run this *inside the repo you want the digest to live in* — typically via
-`uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@<ref>"
-tech-news-digest init`, so nothing needs installing locally. It writes
+`uvx --from "git+https://github.com/LPF9000/sundry.git@<ref>"
+sundry init`, so nothing needs installing locally. It writes
 five files, all pointed at the right engine repo and ref already:
 `config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
 `.github/workflows/ci.yml` (lints workflows, validates the config, and
@@ -144,7 +144,7 @@ permissions:
 
 jobs:
   digest:
-    uses: LPF9000/tech-news-digest/.github/workflows/digest-reusable.yml@{ref}
+    uses: LPF9000/sundry/.github/workflows/digest-reusable.yml@{ref}
     with:
       # A repository VARIABLE is recommended (Settings > Secrets and
       # variables > Actions > Variables tab) — an email address isn't
@@ -197,8 +197,8 @@ jobs:
           enable-cache: true
       - name: Build a dry run (validates schema, hits real sources)
         run: |
-          uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
-            tech-news-digest --config config/feeds.toml \\
+          uvx --from "git+https://github.com/LPF9000/sundry.git@{ref}" \\
+            sundry --config config/feeds.toml \\
             --html-output /tmp/preview.html --no-write-cache --no-archive
 
   scan-secrets:
@@ -236,7 +236,7 @@ etc.) working in this repository. Humans: see README.md instead.
   `MAIL_PASSWORD`, and `DIGEST_RECIPIENT` belong only in this repo's
   GitHub Settings > Secrets and variables > Actions.
 - Never change the `uses:` line in `.github/workflows/digest.yml` to
-  anything other than `LPF9000/tech-news-digest` — that workflow
+  anything other than `LPF9000/sundry` — that workflow
   installs the digest engine fresh from that repo on every run. There
   is nothing to fork or vendor here.
 - Never add topic content (sources, categories, keywords) anywhere but
@@ -245,12 +245,12 @@ etc.) working in this repository. Humans: see README.md instead.
 ## What this repo is
 
 A generated instance of
-[tech-news-digest](https://github.com/LPF9000/tech-news-digest): a
+[sundry](https://github.com/LPF9000/sundry): a
 scheduled GitHub Actions workflow that fetches RSS/Atom feeds, arXiv,
 and Hacker News per `config/feeds.toml`, classifies items into
 categories by keyword, and emails an HTML digest. The engine itself
 lives upstream and is installed at run time — nothing in this repo
-needs a local install, a clone of tech-news-digest, or a fork.
+needs a local install, a clone of sundry, or a fork.
 
 ## The most common task: fill in config/feeds.toml
 
@@ -260,8 +260,8 @@ don't touch anything else. Then validate it builds before telling the
 user it's done:
 
 ```bash
-uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
-  tech-news-digest --config config/feeds.toml \\
+uvx --from "git+https://github.com/LPF9000/sundry.git@{ref}" \\
+  sundry --config config/feeds.toml \\
   --html-output /tmp/preview.html --no-write-cache --no-archive
 ```
 
@@ -340,8 +340,8 @@ common cause; see the three required settings in README.md.
 ## If asked to change how the digest works, not just its content
 
 Fetching, dedupe, classification, and rendering all live upstream in
-tech-news-digest, not here. Point the user at
-https://github.com/LPF9000/tech-news-digest instead of attempting it in
+sundry, not here. Point the user at
+https://github.com/LPF9000/sundry instead of attempting it in
 this repo — that project has its own contribution process for engine
 changes.
 """
@@ -356,7 +356,7 @@ or with this repository live there, written to the cross-tool
 
 NEXT_STEPS = """\
 All five files were created in *this* repo (the one you ran this
-command in), not in tech-news-digest itself — nothing there needs
+command in), not in sundry itself — nothing there needs
 cloning or editing.
 
 Next steps:
@@ -367,8 +367,8 @@ Next steps:
    nothing to fetch or clone. Otherwise, do it by hand using the schema
    in the file's comments, then validate it builds:
 
-     uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
-       tech-news-digest --config {config_path} \\
+     uvx --from "git+https://github.com/LPF9000/sundry.git@{ref}" \\
+       sundry --config {config_path} \\
        --html-output /tmp/preview.html --no-write-cache --no-archive
 
 2. In this repository's GitHub settings, set all three of the following
@@ -408,7 +408,7 @@ Next steps:
 
    Green check: check your inbox and this repo's new digests/ folder.
    Red X: open the failed step's log — see
-   https://github.com/LPF9000/tech-news-digest/blob/main/README.md#troubleshooting
+   https://github.com/LPF9000/sundry/blob/main/README.md#troubleshooting
    for the common causes (an empty recipient is by far the most common).
 """
 
@@ -436,7 +436,7 @@ def _detect_repo_slug(directory: Path) -> str:
 
 def parse_init_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="tech-news-digest init",
+        prog="sundry init",
         description="Scaffold config/feeds.toml and a caller workflow for a new topic repo.",
     )
     parser.add_argument(
@@ -449,7 +449,7 @@ def parse_init_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--ref",
         default=DEFAULT_ENGINE_REF,
-        help=f"tech-news-digest ref to pin the caller workflow to (default: {DEFAULT_ENGINE_REF})",
+        help=f"sundry ref to pin the caller workflow to (default: {DEFAULT_ENGINE_REF})",
     )
     parser.add_argument("--force", action="store_true", help="Overwrite files that already exist")
     return parser.parse_args(argv)

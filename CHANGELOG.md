@@ -5,7 +5,11 @@ Notable changes to this project. Format loosely follows
 
 ## [1.0.0]
 
-First stable release.
+First stable release. Renamed from `tech-news-digest` to Sundry —
+package, CLI command (`sundry`), and repository all moved together;
+GitHub's own redirect covers the old URL, but every doc, workflow, and
+downstream caller now points at the new name directly rather than
+relying on it.
 
 ### Engine
 
@@ -23,7 +27,7 @@ First stable release.
   aborts a run — it's named in the digest footer instead.
 - The engine sends its own digest email over plain SMTP
   (`smtplib`/`email`, standard library, no new dependency) instead of
-  going through a third-party GitHub Action — `tech-news-digest
+  going through a third-party GitHub Action — `sundry
   --send-email` is the entire fetch-through-send pipeline in one
   process. `--send-email` is opt-in, so a plain build or preview never
   has that side effect. GitHub Actions' own part is now just running
@@ -31,7 +35,7 @@ First stable release.
 
 ### Setup and reuse
 
-- `tech-news-digest init` scaffolds a new topic repo's `config/feeds.toml`,
+- `sundry init` scaffolds a new topic repo's `config/feeds.toml`,
   both workflow files (the scheduled run, and a CI that lints workflows,
   validates the config, and scans for leaked secrets), and a scoped
   `AGENTS.md` + `CLAUDE.md` pair — in one command via `uvx`, no local
