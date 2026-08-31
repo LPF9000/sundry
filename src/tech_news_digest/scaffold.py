@@ -1,12 +1,14 @@
-"""`tech-news-digest init`: scaffold a new topic repo's config + caller workflow.
+"""`tech-news-digest init`: scaffold a new topic repo's config + workflows.
 
 Run this *inside the repo you want the digest to live in* — typically via
 `uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@<ref>"
 tech-news-digest init`, so nothing needs installing locally. It writes
-`config/feeds.toml` and `.github/workflows/digest.yml` with the caller
-workflow already pointed at the right engine repo and ref; only the topic
-content (sources/categories/keywords) is left as placeholders for a human
-or an AI agent to fill in.
+three files, all pointed at the right engine repo and ref already:
+`config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
+and `.github/workflows/ci.yml` (lints workflows, validates the config,
+and scans for leaked secrets on every push/PR). Only the topic content
+(sources/categories/keywords) is left as placeholders for a human or an
+AI agent to fill in.
 """
 
 from __future__ import annotations
@@ -103,10 +105,70 @@ jobs:
       MAIL_PASSWORD: ${{{{ secrets.MAIL_PASSWORD }}}}
 """
 
+CI_WORKFLOW_TEMPLATE = """\
+name: CI
+
+# Runs on every push/PR to this repo: lints the workflow files, validates
+# config/feeds.toml actually builds, and scans the whole repo for leaked
+# secrets (API keys, tokens, credentials accidentally committed). None of
+# this sends email or touches digests/state — see digest.yml for that.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-workflows:
+    name: Lint GitHub Actions workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: reviewdog/action-actionlint@v1.65.2
+        with:
+          fail_level: error
+
+  validate-config:
+    name: Validate config/feeds.toml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Build a dry run (validates schema, hits real sources)
+        run: |
+          uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
+            tech-news-digest --config config/feeds.toml \\
+            --html-output /tmp/preview.html --no-write-cache --no-archive
+
+  scan-secrets:
+    name: Scan for leaked secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history, not just the latest commit
+      # The gitleaks CLI (Apache-2.0) run directly via its official image,
+      # not the gitleaks-action marketplace wrapper: the wrapper requires a
+      # paid license for organization-owned repos, the raw CLI never does.
+      # Intentionally not version-pinned, unlike everything else in this
+      # workflow — a secret scanner is more useful current than
+      # reproducible, the same tradeoff Dependabot/CodeQL make.
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest \\
+            detect --source /repo --no-banner -v
+"""
+
 NEXT_STEPS = """\
-Both files were created in *this* repo (the one you ran this command
-in), not in tech-news-digest itself — nothing there needs cloning or
-editing.
+All three files were created in *this* repo (the one you ran this
+command in), not in tech-news-digest itself — nothing there needs
+cloning or editing.
 
 Next steps:
 
@@ -135,10 +197,13 @@ Next steps:
    - Settings > Actions > General > Workflow permissions -> "Read and
      write permissions" (so the workflow can commit each day's archive)
 
-3. Commit and push {config_path} and {workflow_path}. The workflow runs
-   daily at 12:00 UTC, or on demand from the Actions tab — edit the
-   `cron` line in {workflow_path} for a different time or frequency
-   (see the comment above it).
+3. Commit and push {config_path}, {workflow_path}, and {ci_path}. The
+   digest workflow runs daily at 12:00 UTC, or on demand from the Actions
+   tab — edit the `cron` line in {workflow_path} for a different time or
+   frequency (see the comment above it). {ci_path} runs on every push/PR
+   from here on: it lints workflow YAML, validates config/feeds.toml
+   actually builds, and scans the repo for leaked secrets — you don't
+   need to do anything further to enable it.
 
 4. Test it now rather than waiting for the schedule — do this again any
    time you change {config_path} too, not just once. Sends a real email
@@ -206,9 +271,10 @@ def run_init(argv: list[str] | None = None) -> int:
 
     config_path = args.directory / "config" / "feeds.toml"
     workflow_path = args.directory / ".github" / "workflows" / "digest.yml"
+    ci_path = args.directory / ".github" / "workflows" / "ci.yml"
 
     if not args.force:
-        existing = [str(p) for p in (config_path, workflow_path) if p.exists()]
+        existing = [str(p) for p in (config_path, workflow_path, ci_path) if p.exists()]
         if existing:
             print(
                 f"error: already exists: {', '.join(existing)} (pass --force to overwrite)",
@@ -222,9 +288,21 @@ def run_init(argv: list[str] | None = None) -> int:
     workflow_path.parent.mkdir(parents=True, exist_ok=True)
     workflow_path.write_text(WORKFLOW_TEMPLATE.format(ref=args.ref), encoding="utf-8")
 
+    ci_path.parent.mkdir(parents=True, exist_ok=True)
+    ci_path.write_text(CI_WORKFLOW_TEMPLATE.format(ref=args.ref), encoding="utf-8")
+
     print(f"Created {config_path}")
     print(f"Created {workflow_path}")
+    print(f"Created {ci_path}")
     print()
     repo_slug = _detect_repo_slug(args.directory)
-    print(NEXT_STEPS.format(config_path=config_path, workflow_path=workflow_path, ref=args.ref, repo_slug=repo_slug))
+    print(
+        NEXT_STEPS.format(
+            config_path=config_path,
+            workflow_path=workflow_path,
+            ci_path=ci_path,
+            ref=args.ref,
+            repo_slug=repo_slug,
+        )
+    )
     return 0

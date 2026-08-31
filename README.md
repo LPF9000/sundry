@@ -77,10 +77,13 @@ cd my-news-digest
 uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
 ```
 
-This writes two files in the current directory — `config/feeds.toml` and
-`.github/workflows/digest.yml` — already pointed at the right repo and
-ref, nothing to copy-paste or get wrong. It prints the exact next steps
-when it runs, repeated below.
+This writes three files in the current directory, already pointed at
+the right repo and ref, nothing to copy-paste or get wrong:
+`config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
+and `.github/workflows/ci.yml` (lints workflow YAML, validates the
+config actually builds, and scans the repo for leaked secrets on every
+push/PR — see [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)).
+It prints the exact next steps when it runs, repeated below.
 
 **3. Fill in the TODOs in `config/feeds.toml`.**
 
@@ -91,7 +94,7 @@ with a description of your topic and let it do this step.
 **4. Commit and push:**
 
 ```bash
-git add config/feeds.toml .github/workflows/digest.yml
+git add config/feeds.toml .github/workflows/digest.yml .github/workflows/ci.yml
 git commit -m "Set up daily digest"
 git push -u origin main
 ```
@@ -181,6 +184,7 @@ a manual step by design). Every file it creates or edits lands in
 - [How it works](#how-it-works)
 - [Repository layout](#repository-layout)
 - [Continuous integration](#continuous-integration)
+- [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)
 - [Tuning the digest](#tuning-the-digest)
 - [Local development](#local-development)
 - [Example: semiconductor-news-digest](#example-semiconductor-news-digest)
@@ -300,8 +304,8 @@ not to run on a schedule.
 A repo that uses the reusable workflow (like
 [semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest))
 gets its own `config/feeds.toml`, `.github/workflows/digest.yml`,
-`digests/YYYY-MM-DD.md` archive, and `state/seen.json` dedupe cache — none
-of that lives in this repo.
+`.github/workflows/ci.yml`, `digests/YYYY-MM-DD.md` archive, and
+`state/seen.json` dedupe cache — none of that lives in this repo.
 
 `tech_news_digest` is a proper installable Python package (not a loose
 script): typed with dataclasses and `from __future__ import annotations`
@@ -317,9 +321,16 @@ Every pull request runs `.github/workflows/ci.yml`:
    over every workflow file, catching real workflow bugs (bad expressions,
    unknown contexts, shellcheck issues in `run:` blocks), not just YAML
    syntax.
-2. **Lint & test** — `ruff check`, `ruff format --check`, `mypy`, and the
+2. **Scan for leaked secrets** — [gitleaks](https://github.com/gitleaks/gitleaks)
+   over the full git history, not just the current diff. Run as the raw
+   CLI via its official Docker image, not the `gitleaks-action` wrapper —
+   the wrapper needs a paid license for organization-owned repos, the
+   underlying CLI (Apache-2.0) never does. Same job `tech-news-digest
+   init` scaffolds into every topic repo; see
+   [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo).
+3. **Lint & test** — `ruff check`, `ruff format --check`, `mypy`, and the
    `pytest` suite, on Python 3.11 and 3.12.
-3. **Build & email a preview digest** — runs the real pipeline against
+4. **Build & email a preview digest** — runs the real pipeline against
    [`examples/feeds.toml`](./examples/feeds.toml) (the real semiconductor
    config, not a stub) and live sources (no commit, no cache write) and,
    if the mail secrets are configured, emails you the actual resulting
@@ -348,6 +359,33 @@ config mirrors the CI lint checks for anyone who wants them to run
 locally on every commit — `uv run pre-commit install` (or
 `pip install pre-commit && pre-commit install` if you'd rather not add
 it as a project dependency).
+
+## Continuous integration for your topic repo
+
+`tech-news-digest init` (see [Using this for your own topic](#using-this-for-your-own-topic))
+also writes `.github/workflows/ci.yml` into your repo — not just
+`config/feeds.toml` and the scheduled `digest.yml`. It runs on every
+push/PR from day one, no setup beyond what `init` already did:
+
+1. **Lint GitHub Actions workflows** — the same actionlint check as this
+   repo's own CI, over your `digest.yml` and `ci.yml`.
+2. **Validate `config/feeds.toml`** — builds a real dry run
+   (`--no-write-cache --no-archive`) against your actual config and live
+   sources, so a broken source, a bad `default_category`, or a missing
+   `general` category fails the PR with a clear reason instead of
+   silently breaking tomorrow's scheduled run.
+3. **Scan for leaked secrets** — [gitleaks](https://github.com/gitleaks/gitleaks)
+   over your repo's full history, the same way and for the same reason
+   as this repo's own CI above. Your `config/feeds.toml` is plain public
+   config (source URLs, keywords) with nowhere for a real credential to
+   end up, but this catches it immediately if one ever does — a pasted
+   token in a commit message, an accidentally-committed `.env`, anything
+   with the shape of a key or password anywhere in the repo's history.
+
+None of this sends email or touches `digests/`/`state/seen.json` — it's
+pure validation. It needs no additional secrets or settings beyond what
+[Setting up email](#setting-up-email-required-one-time) already has you
+set for the scheduled run.
 
 ## Tuning the digest
 
