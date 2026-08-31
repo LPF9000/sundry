@@ -105,8 +105,10 @@ exact clicks. All three are required; missing any one of them is the
 most common thing that goes wrong (see [Troubleshooting](#troubleshooting)):
 
 - Secrets `MAIL_USERNAME` and `MAIL_PASSWORD` (**Secrets** tab)
-- Variable `DIGEST_RECIPIENT` (**Variables** tab — a different tab from
-  the secrets above, easy to miss)
+- Who receives it, `DIGEST_RECIPIENT` — as either a **Variables**-tab
+  variable (recommended: an email address isn't sensitive, and a
+  variable shows its value in the Settings UI) or a **Secrets**-tab
+  secret. Only one is needed; both work.
 - **Workflow permissions** set to "Read and write" (**Settings > Actions
   > General**)
 
@@ -231,7 +233,9 @@ reusable workflow for a real topic.
 The recipient defaults to `bestasitis@gmail.com` (this repo's owner) but
 is overridable without touching any YAML: set a **`DIGEST_RECIPIENT`**
 repository variable at **Settings > Secrets and variables > Actions >
-Variables tab > New repository variable**.
+Variables tab > New repository variable** — or, if you'd rather, a
+`DIGEST_RECIPIENT` secret instead (same page, **Secrets** tab). Either
+one works; the variable is checked first, falling back to the secret.
 
 Using a provider other than Gmail? Swap `server_address`/`server_port` in
 [`ci.yml`](./.github/workflows/ci.yml) (or, for a repo using the reusable
@@ -246,7 +250,7 @@ step's log. The error there is almost always one of these:
 
 | Error / symptom | Cause | Fix |
 | --- | --- | --- |
-| `At least one of 'to', 'cc' or 'bcc' must be specified` | The `DIGEST_RECIPIENT` repository **variable** isn't set (secrets and variables are different tabs — easy to set one and forget the other) | Settings > Secrets and variables > Actions > **Variables** tab > add `DIGEST_RECIPIENT` |
+| `At least one of 'to', 'cc' or 'bcc' must be specified` | Neither a `DIGEST_RECIPIENT` variable nor a `DIGEST_RECIPIENT` secret is set (recipient can be either — see [Setting up email](#setting-up-email-required-one-time)) | Settings > Secrets and variables > Actions — add `DIGEST_RECIPIENT` on the **Variables** tab (recommended) or the **Secrets** tab |
 | Mail step fails with an auth error (`535`, `Username and Password not accepted`) | `MAIL_USERNAME`/`MAIL_PASSWORD` wrong, or using your normal Gmail password instead of an App Password | Regenerate an [App Password](https://myaccount.google.com/apppasswords) and update the `MAIL_PASSWORD` secret |
 | `Commit archive & dedupe cache` step fails to push | Workflow permissions aren't set to "Read and write" | Settings > Actions > General > Workflow permissions > "Read and write permissions" |
 | `command not found: uvx` (on your own machine) | `uv` isn't installed, or your shell hasn't picked up the new `PATH` yet | Re-run the [install command](#prerequisites), then open a new terminal |

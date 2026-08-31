@@ -29,9 +29,15 @@ on:
         type: string
         default: v2.0.0
       recipient:
-        description: "Who receives the digest email. Pass your repo's own vars.DIGEST_RECIPIENT."
+        description: >
+          Who receives the digest email. Pass your repo's own
+          vars.DIGEST_RECIPIENT (recommended — variables show their
+          value in the Settings UI, and an email address isn't
+          sensitive). Leave this at its default and pass
+          secrets.DIGEST_RECIPIENT instead if you'd rather set it as a
+          secret; only one of the two needs a value.
         type: string
-        required: true
+        default: ""
       python-version:
         type: string
         default: "3.12"
@@ -49,6 +55,13 @@ on:
         required: true
       MAIL_PASSWORD:
         required: true
+      DIGEST_RECIPIENT:
+        description: >
+          Optional. Who receives the digest email, as an alternative to
+          inputs.recipient — set this if you'd rather configure the
+          recipient as a secret than a repository variable. Used only
+          when inputs.recipient is empty.
+        required: false
 
 permissions:
   contents: write
@@ -63,11 +76,15 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Check recipient is configured
-        if: inputs.recipient == ''
+        # The `secrets` context isn't available in step `if:` conditions,
+        # only in run/with/env — so this checks both inside the script
+        # rather than in `if:`.
         run: |
-          echo "::error::No recipient email configured. This workflow was called with an empty 'recipient' input."
-          echo "::error::In THIS repository (not tech-news-digest): Settings > Secrets and variables > Actions > Variables tab > New repository variable, name it DIGEST_RECIPIENT, value your email address. Then re-run this workflow."
-          exit 1
+          if [ -z "${{ inputs.recipient }}" ] && [ -z "${{ secrets.DIGEST_RECIPIENT }}" ]; then
+            echo "::error::No recipient email configured. Neither inputs.recipient nor secrets.DIGEST_RECIPIENT resolved to a value."
+            echo "::error::In THIS repository (not tech-news-digest): set a DIGEST_RECIPIENT repository variable (Settings > Secrets and variables > Actions > Variables tab) OR a DIGEST_RECIPIENT secret (same page, Secrets tab), and make sure your caller workflow passes it through (with: recipient / secrets: DIGEST_RECIPIENT). Then re-run this workflow."
+            exit 1
+          fi
 
       - uses: astral-sh/setup-uv@v10.0.1
         with:
@@ -96,6 +113,6 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: ${{ env.DIGEST_SUBJECT }}
-          to: ${{ inputs.recipient }}
+          to: ${{ inputs.recipient || secrets.DIGEST_RECIPIENT }}
           from: "${{ inputs.mail-from-name }} <${{ secrets.MAIL_USERNAME }}>"
           html_body: file://digest_output/latest.html
