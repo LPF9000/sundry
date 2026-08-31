@@ -38,6 +38,57 @@ def test_init_config_loads_via_load_config(tmp_path):
     assert {category.key for category in config.categories} == {"general"}
 
 
+def test_init_config_explains_itself_for_a_non_technical_reader():
+    from tech_news_digest.scaffold import CONFIG_TEMPLATE
+
+    assert "STEP 1" in CONFIG_TEMPLATE
+    assert "STEP 2" in CONFIG_TEMPLATE
+    assert "STEP 3" in CONFIG_TEMPLATE
+    # The comment/uncomment concept has to be spelled out somewhere, not
+    # just assumed — that's the whole gap this template exists to close.
+    assert "comment" in CONFIG_TEMPLATE.lower()
+
+
+def _uncomment_block(lines: list[str], start_marker: str) -> list[str]:
+    """Simulate a user literally following 'delete the # at the start of
+    each line of this block' on the block starting at `start_marker`."""
+    out = []
+    in_block = False
+    for line in lines:
+        if line.strip() == start_marker:
+            in_block = True
+        if in_block:
+            if line.startswith("# "):
+                out.append(line[2:])
+            elif line == "#":
+                out.append("")
+            else:
+                in_block = False
+                out.append(line)
+        else:
+            out.append(line)
+    return out
+
+
+def test_init_config_example_blocks_are_valid_toml_once_uncommented():
+    # Both example blocks are shown commented-out (inert) by default; if a
+    # reader follows the file's own instructions and uncomments one, the
+    # result must actually parse — a broken worked example is worse than
+    # no example.
+    import tomllib
+
+    from tech_news_digest.scaffold import CONFIG_TEMPLATE
+
+    lines = CONFIG_TEMPLATE.splitlines()
+    lines = _uncomment_block(lines, "# [[rss_sources]]")
+    lines = _uncomment_block(lines, "# [[categories]]")
+    data = tomllib.loads("\n".join(lines))
+
+    assert data["rss_sources"][0]["name"]
+    assert data["rss_sources"][0]["url"]
+    assert [c["key"] for c in data["categories"]] == ["example_topic", "general"]
+
+
 def test_init_workflow_pins_the_default_ref(tmp_path):
     from tech_news_digest.scaffold import DEFAULT_ENGINE_REF
 

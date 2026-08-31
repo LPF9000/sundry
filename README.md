@@ -222,6 +222,7 @@ see them.
 - [Repository layout](#repository-layout)
 - [Continuous integration](#continuous-integration)
 - [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)
+- [Filling in config/feeds.toml without an AI agent](#filling-in-configfeedstoml-without-an-ai-agent)
 - [Tuning the digest](#tuning-the-digest)
 - [Local development](#local-development)
 - [Example: semiconductor-news-digest](#example-semiconductor-news-digest)
@@ -426,6 +427,96 @@ None of this sends email or touches `digests/`/`state/seen.json` — it's
 pure validation. It needs no additional secrets or settings beyond what
 [Setting up email](#setting-up-email-required-one-time) already has you
 set for the scheduled run.
+
+## Filling in config/feeds.toml without an AI agent
+
+No AI coding agent handy, and never edited a config file before? This
+walks through it by hand, start to finish, on a made-up example topic —
+a "Cooking Digest." Skip this section entirely if you're using an AI
+agent (see [For AI agents](#for-ai-agents)); it already knows all of this.
+
+**The file itself explains as you go.** `config/feeds.toml`, once
+`tech-news-digest init` has created it, has the same walkthrough built
+right in as comments (lines starting with `#`) — this section just says
+it a second way, with a worked example.
+
+**Two ideas to have before you start:**
+
+- A **comment** is any line starting with `#` — a note for humans that
+  the program ignores. A block of settings shown entirely in comments
+  (every line starts with `# `) is turned *off*. To turn it *on*, delete
+  the `# ` at the start of each of that block's lines.
+- The file has two kinds of things to fill in: **sources** (where to
+  look) and **categories** (how to sort what's found). You need at
+  least one source. You always need the `general` category — don't
+  delete or rename it — and can add more above it for anything specific.
+
+**Worked example.** Say the topic is home cooking, and there's a food
+blog with an RSS feed at `https://example-kitchen-blog.com/feed.xml`
+worth including. In `config/feeds.toml`, find this commented-out block:
+
+```toml
+# [[rss_sources]]
+# name = "TODO: what to call this source (shown in the digest)"
+# url = "https://example.com/feed.xml"
+# default_category = "TODO: a category key from step 3, optional"
+```
+
+Delete the `# ` at the start of the first three lines (leave the fourth
+one commented out — it's optional, and this example doesn't need it),
+and replace the placeholder text:
+
+```toml
+[[rss_sources]]
+name = "Example Kitchen Blog"
+url = "https://example-kitchen-blog.com/feed.xml"
+```
+
+Now find the commented-out category example, copy it above `general`,
+uncomment it the same way, and fill in real values:
+
+```toml
+[[categories]]
+key = "baking"
+title = "Baking"
+blurb = "Bread, pastry, and dessert recipes and technique."
+max_items = 8
+keywords = [
+  "bread",
+  "sourdough",
+  "pastry",
+  " bake ",
+]
+
+[[categories]]
+key = "general"
+title = "General"
+blurb = "Everything else cooking-related."
+max_items = 8
+keywords = []
+```
+
+Any item whose title or summary contains one of those keywords
+(matching ignores capitalization) lands under "Baking"; everything else
+falls through to "General." Repeat the `[[rss_sources]]` block for each
+additional feed, and the `[[categories]]` block for each additional
+category — copy the whole block, don't just add one line.
+
+**Check your work** before pushing, from a terminal in this repo:
+
+```bash
+uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" \
+  tech-news-digest --config config/feeds.toml \
+  --html-output /tmp/preview.html --no-write-cache --no-archive
+```
+
+No credentials needed, and nothing gets committed or emailed — it just
+tries to build the digest and tells you if something's wrong. A wall of
+text ending in `Wrote /tmp/preview.html` means it worked; open that file
+in a browser to see exactly what the real email would look like. A
+`ConfigError` names what's wrong in plain English (a typo in a category
+key, a missing `general` category, and so on) — fix what it says and run
+it again. See [Troubleshooting](#troubleshooting) for the common ones.
 
 ## Tuning the digest
 

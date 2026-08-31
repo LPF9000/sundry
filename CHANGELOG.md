@@ -38,6 +38,11 @@ First stable release.
   `CLAUDE.md` `init` writes into that caller's repo mean an agent opened
   there afterward has the schema and setup steps on disk already —
   nothing to fetch from this repo at all.
+- The scaffolded `config/feeds.toml` is written for someone editing it
+  by hand with no TOML experience: numbered steps, an explanation of
+  what a comment is and what "uncommenting" means, and a worked example
+  category alongside the source examples. README.md gains a matching
+  "Filling in config/feeds.toml without an AI agent" walkthrough.
 
 ### Tooling
 
