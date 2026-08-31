@@ -1,6 +1,8 @@
+import subprocess
+
 from tech_news_digest.cli import main
 from tech_news_digest.config import load_config
-from tech_news_digest.scaffold import run_init
+from tech_news_digest.scaffold import _detect_repo_slug, run_init
 
 
 def test_init_creates_config_and_workflow(tmp_path):
@@ -61,3 +63,36 @@ def test_cli_main_dispatches_init_subcommand(tmp_path):
     assert exit_code == 0
     assert (tmp_path / "config" / "feeds.toml").is_file()
     assert (tmp_path / ".github" / "workflows" / "digest.yml").is_file()
+
+
+def test_detect_repo_slug_falls_back_without_a_git_remote(tmp_path):
+    assert _detect_repo_slug(tmp_path) == "<owner>/<repo>"
+
+
+def test_detect_repo_slug_reads_a_github_https_remote(tmp_path):
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://github.com/someone/some-repo.git"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    assert _detect_repo_slug(tmp_path) == "someone/some-repo"
+
+
+def test_detect_repo_slug_reads_a_github_ssh_remote(tmp_path):
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "git@github.com:someone/some-repo.git"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    assert _detect_repo_slug(tmp_path) == "someone/some-repo"
+
+
+def test_init_next_steps_include_a_gh_cli_command(tmp_path, capsys):
+    run_init([str(tmp_path)])
+    out = capsys.readouterr().out
+    assert "gh workflow run digest.yml" in out
+    assert "alias run-digest=" in out

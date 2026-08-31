@@ -107,12 +107,33 @@ most common thing that goes wrong (see [Troubleshooting](#troubleshooting)):
 - **Workflow permissions** set to "Read and write" (**Settings > Actions
   > General**)
 
-**6. Test it now, don't wait for the schedule.** In this repo on GitHub,
-go to the **Actions** tab > **Daily Digest** (in the left sidebar) > **Run
-workflow** > **Run workflow**. Watch it run — it takes under a minute.
-Green check: check your inbox and this repo's new `digests/` folder.
-Red X: open the failed step's log, then see
+**6. Test it now, don't wait for the schedule.** This sends a real
+digest to your real inbox on demand — do this every time you want to
+confirm the setup (or a config change) actually works, not just once.
+
+Web UI: in this repo on GitHub, go to the **Actions** tab > **Daily
+Digest** (left sidebar) > **Run workflow** > **Run workflow**.
+
+Or, with the [`gh` CLI](https://cli.github.com/) (`gh auth login` once
+if you haven't):
+
+```bash
+gh workflow run digest.yml --repo <your-username>/<your-repo>
+```
+
+Either way it takes under a minute — watch it in the Actions tab, or
+with `gh run watch`. Green check: check your inbox and this repo's new
+`digests/` folder. Red X: open the failed step's log, then see
 [Troubleshooting](#troubleshooting).
+
+Running this often enough to want a shortcut? Add an alias to your
+shell config (`~/.zshrc` or `~/.bashrc`):
+
+```bash
+alias run-digest='gh workflow run digest.yml --repo <your-username>/<your-repo>'
+```
+
+then `source ~/.zshrc` (or open a new terminal) and just run `run-digest`.
 
 That's the entire setup. Nothing to install beyond `uv`, no copy of
 `src/tech_news_digest/` to keep in sync with this repo's own updates —
@@ -196,10 +217,11 @@ are the same address).
    everything is wired up correctly.
 
 These same secrets, set here in *this* repo, are also what let this
-repo's own CI build and email you a preview digest from
-[`examples/feeds.toml`](./examples/feeds.toml) on every pull request —
-see [Continuous integration](#continuous-integration). They're unrelated
-to, and don't need to match, the secrets you set in a repo that uses the
+repo's own CI build and email you a real, full preview digest from
+[`examples/feeds.toml`](./examples/feeds.toml) — a real semiconductor/DV
+config, not a token stub — on every pull request; see
+[Continuous integration](#continuous-integration). They're unrelated to,
+and don't need to match, the secrets you set in a repo that uses the
 reusable workflow for a real topic.
 
 The recipient defaults to `bestasitis@gmail.com` (this repo's owner) but
@@ -253,16 +275,27 @@ failing the whole run. Nothing here needs to be babysat.
 
 ```
 src/tech_news_digest/      The digest package (fetch, classify, render, CLI, scaffold)
-examples/feeds.toml        Annotated example config — schema demo, not a real topic
+examples/feeds.toml        Real semiconductor/DV config, used only to exercise CI end to end
 tests/                     Unit tests (mocked HTTP — no live network calls)
 digest_output/             Scratch dir for the HTML the email step sends (gitignored)
 uv.lock                    Locked, reproducible dependency versions (uv)
 AGENTS.md                  Setup instructions for AI coding agents (see "For AI agents")
 CLAUDE.md                  Pointer to AGENTS.md, for Claude Code specifically
-.github/workflows/ci.yml              PR checks + a preview email built from examples/feeds.toml
+.github/workflows/ci.yml              PR checks + a real preview digest built from examples/feeds.toml
 .github/workflows/digest-reusable.yml The reusable workflow external repos call (git install)
 .github/actions/           Composite action used by ci.yml
 ```
+
+`examples/feeds.toml` is not a minimal schema stub — it's the same
+real, full semiconductor/DV config as
+[semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest),
+kept here so this repo's own CI builds and emails a genuinely
+substantive digest on every PR, exercising the whole pipeline the way
+an actual user's repo would rather than proving little more than "it
+parses." This repo still ships no default topic and still has no
+scheduled/cron workflow of its own (that's what semiconductor-news-digest
+is for) — `examples/feeds.toml` exists purely for CI to build against,
+not to run on a schedule.
 
 A repo that uses the reusable workflow (like
 [semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest))
@@ -287,11 +320,15 @@ Every pull request runs `.github/workflows/ci.yml`:
 2. **Lint & test** — `ruff check`, `ruff format --check`, `mypy`, and the
    `pytest` suite, on Python 3.11 and 3.12.
 3. **Build & email a preview digest** — runs the real pipeline against
-   [`examples/feeds.toml`](./examples/feeds.toml) and live sources (no
-   commit, no cache write) and, if the mail secrets are configured,
-   emails you the result prefixed `[PR Preview]` so you can confirm the
-   engine still works end to end before merging. If the secrets aren't
-   set yet, this step is skipped with a warning instead of failing the PR.
+   [`examples/feeds.toml`](./examples/feeds.toml) (the real semiconductor
+   config, not a stub) and live sources (no commit, no cache write) and,
+   if the mail secrets are configured, emails you the actual resulting
+   digest — same content a real user's repo would send — prefixed
+   `[PR Preview]` so you can confirm the whole engine still works end to
+   end, the way a user would experience it, before merging. If the
+   secrets aren't set yet, this step is skipped with a warning instead of
+   failing the PR. This repo has no scheduled workflow of its own —
+   `examples/feeds.toml` is built only here, on PRs, never on a cron.
 
 `ci.yml` installs the package via [uv](https://docs.astral.sh/uv/) from
 the committed `uv.lock` (through the shared
@@ -370,9 +407,11 @@ is a complete, real-world instance built on this engine — a semiconductor
 design/verification topic (UVM, RTL, mixed-signal, DFT, hardware
 security, RISC-V, EDA flows, conferences) with nothing in it but
 `config/feeds.toml` and the caller workflow, exactly like [Using this for
-your own topic](#using-this-for-your-own-topic) describes. It's the
-reference to copy from if you want to see a fully tuned config, not just
-the annotated stub in `examples/`.
+your own topic](#using-this-for-your-own-topic) describes. Its
+`config/feeds.toml` and this repo's `examples/feeds.toml` are kept as the
+same content on purpose: that repo actually runs it on a schedule and
+sends the real daily digest; this repo builds the identical config only
+in CI, on every PR, to prove the engine itself still works.
 
 ## Operational notes
 
