@@ -3,24 +3,47 @@
 [![CI](https://github.com/LPF9000/tech-news-digest/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/tech-news-digest/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-A reusable, config-driven tool that fetches public news/research sources
-on a schedule and emails you a daily digest — built and run entirely on
-GitHub Actions, no server to host. This repo is the engine only: it ships
-no default topic, and nothing about how it works is tied to any one
-subject. Repointing it at any subject is a config file, not a code
-change — see [Using this for your own topic](#using-this-for-your-own-topic),
-or [semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)
-for a complete real-world example built on this engine.
+A self-hosted intelligence pipeline for monitoring a niche — think less
+"news app," more a monitoring job you'd otherwise have to build and
+host yourself. Point it at a set of sources (RSS/Atom feeds, arXiv
+searches, Hacker News queries), and on a schedule it fetches, dedupes,
+and sorts what's new into your own categories, then emails you the
+result. The whole setup is one config file and two workflow files,
+checked into a repo you control: versioned and reproducible the way
+infrastructure is meant to be, not a black-box subscription.
 
-It pulls only from free/public sources (no scraping behind logins, no
-paid APIs). Whatever repo you point it at ends up with its own browsable
-Markdown archive of every day's digest, committed alongside its config.
+**Why this over a news app, a newsletter, or rolling your own:**
+
+- **No server, ever.** Runs entirely as a scheduled GitHub Actions job —
+  nothing to provision, patch, or pay to keep online between runs. Set
+  it up once and forget it.
+- **Works from a personal repo, even under restrictive IT policy.** No
+  infrastructure request, no service to get approved — it's a config
+  file and a workflow in a repo you already control. A practical way to
+  track a work-relevant niche at a company that won't let you stand up
+  anything else.
+- **Free and dependency-light.** No paid APIs, no hosting cost, no
+  scraping behind logins — only public RSS/Atom, the arXiv API, and
+  Hacker News' public search, and a small, stable set of Python
+  dependencies.
+- **Config-driven, not code-driven.** Repointing it at a different
+  niche entirely — semiconductors, audio/DSP production, whatever you
+  track — is editing one TOML file, not forking or patching code. See
+  [Using this for your own topic](#using-this-for-your-own-topic), or
+  [semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)
+  for a complete real-world example built on this engine.
+
+Whatever repo you point it at ends up with its own browsable Markdown
+archive of every day's digest, committed alongside its config — a
+running, versioned record of what it found, not just an inbox that
+scrolls away.
 
 ## Contents
 
 - [Prerequisites](#prerequisites)
 - [Using this for your own topic](#using-this-for-your-own-topic)
 - [How it works](#how-it-works)
+- [Known limitations](#known-limitations)
 - [For AI agents](#for-ai-agents)
 - [Setting up email (required, one-time)](#setting-up-email-required-one-time)
 - [Troubleshooting](#troubleshooting)
@@ -196,6 +219,35 @@ against upstream changes. This mirrors how a real GitHub Action is
 meant to be consumed (see
 [GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
 not a fork-and-diverge template.
+
+## Known limitations
+
+Worth knowing before you rely on this for something important — these
+are deliberate scope decisions, not bugs waiting to be filed:
+
+- **Ranking is naive, on purpose.** Which category an item lands in is
+  decided by keyword substring matching — no relevance scoring, no
+  clustering of the same story covered by two different sources, no
+  source-quality or popularity weighting. Purpose-built ranking tools
+  exist and do this well; this project deliberately isn't one of them.
+  A half-right ranking model is worse than none — it can silently bury
+  or misfile something you actually needed to see, in a way that's much
+  harder to notice than "this category is a little broad." Keyword
+  matching is dumb but legible: read `config/feeds.toml` and you know
+  exactly why anything landed where it did.
+- **Few tuning knobs beyond the config file, deliberately.** Every extra
+  dial is something to misconfigure and something to explain in a doc.
+  If a topic needs more nuance than "keyword match, capped list size,"
+  this may be too blunt a tool for it as-is.
+- **Dedupe is exact-URL only.** The same story from two different feeds,
+  worded differently, shows up twice — a real near-duplicate clustering
+  step would catch that; this doesn't attempt it.
+
+None of this is unfixable — it's what's out of scope for now to keep
+the tool's behavior simple and easy to reason about, rather than risk
+quietly degrading digest quality by getting a scoring pass wrong. See
+[CONTRIBUTING.md](./CONTRIBUTING.md) if better ranking is something
+you'd want to help build.
 
 ## For AI agents
 
