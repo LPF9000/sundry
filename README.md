@@ -39,6 +39,11 @@ Markdown archive of every day's digest, committed alongside its config.
   version). `uvx` (used below) ships with `uv` — nothing extra to install
   for it. Full install docs, other package managers, uninstall
   instructions: [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
+
+  **No separate Python install needed.** `uv` manages its own Python
+  versions — if it doesn't find one it can use, it downloads one itself,
+  automatically, the first time it's needed. Nothing to install or
+  configure beyond `uv` itself, even on a machine with no Python at all.
 - A Gmail address to send *from* (any address works, including the same
   one that receives the digest) — see [Setting up email](#setting-up-email-required-one-time).
 
@@ -77,6 +82,11 @@ cd my-news-digest
 uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
 ```
 
+`uvx --from "git+URL"` doesn't clone tech-news-digest into your repo —
+it fetches that repo into `uv`'s own cache, builds and runs the tool
+from there, and exits. Nothing of tech-news-digest's source, tests, or
+git history ends up here; only the files `init` explicitly writes do.
+
 This writes five files in the current directory, already pointed at
 the right repo and ref, nothing to copy-paste or get wrong:
 `config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
@@ -88,12 +98,14 @@ steps for *this* repo, so an AI agent opened here already has
 everything it needs — see [For AI agents](#for-ai-agents)). It prints
 the exact next steps when it runs, repeated below.
 
-**3. Fill in the TODOs in `config/feeds.toml`.**
-
-See [Tuning the digest](#tuning-the-digest) for the schema, or open an
-AI coding agent in this repo (see [For AI agents](#for-ai-agents)
-below) and describe your topic — it already has the new `AGENTS.md`
-here to work from.
+**3. Open your AI coding agent rooted at *this* repo** (a fresh
+session here — not one still pointed at tech-news-digest or some other
+project) **and describe your topic**, or fill in the TODOs in
+`config/feeds.toml` by hand using the schema in
+[Tuning the digest](#tuning-the-digest). `AGENTS.md`/`CLAUDE.md`
+auto-load only for a session whose working directory is this repo, so
+this step only works once the agent is actually opened here — see
+[For AI agents](#for-ai-agents) for why.
 
 **4. Commit and push:**
 
@@ -190,6 +202,14 @@ and the exact `gh` commands for your repo, with nothing to fetch or
 clone. So the moment `init` has run, close this repo (or never open it
 at all) and just work from the agent inside your new repo — it already
 has everything the prompt above would have needed this repo for.
+
+This only works if the agent is actually **opened rooted at your repo**
+— a fresh session there, `cd your-repo && claude` or an IDE window
+pointed at that folder. `AGENTS.md`/`CLAUDE.md` auto-load based on the
+working directory a session starts in, not a global setting or
+something carried over from a previous session — an agent still open in
+a different project, or in a checkout of tech-news-digest itself, won't
+see them.
 
 ## Contents
 
