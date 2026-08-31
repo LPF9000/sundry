@@ -3,40 +3,18 @@
 [![CI](https://github.com/LPF9000/sundry/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/sundry/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-A self-hosted intelligence pipeline for monitoring a niche — think less
-"news app," more a monitoring job you'd otherwise have to build and
-host yourself. Point it at a set of sources (RSS/Atom feeds, arXiv
-searches, Hacker News queries), and on a schedule it fetches, dedupes,
-and sorts what's new into your own categories, then emails you the
-result. The whole setup is one config file and two workflow files,
-checked into a repo you control: versioned and reproducible the way
-infrastructure is meant to be, not a black-box subscription.
+A little pipeline that watches whatever corner of the internet you
+care about — RSS feeds, arXiv, Hacker News, whatever — and emails you
+what's new. Runs entirely on GitHub Actions: no server, nothing to
+host, nothing to babysit. Point it at a topic, get a digest.
 
-**Why this over a news app, a newsletter, or rolling your own:**
+Repointing it at a different topic is a config file, not a fork — see
+[Using this for your own topic](#using-this-for-your-own-topic), or
+[semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)
+for a real one running in production.
 
-- **No server, ever.** Runs entirely as a scheduled GitHub Actions job —
-  nothing to provision, patch, or pay to keep online between runs. Set
-  it up once and forget it.
-- **Works from a personal repo, even under restrictive IT policy.** No
-  infrastructure request, no service to get approved — it's a config
-  file and a workflow in a repo you already control. A practical way to
-  track a work-relevant niche at a company that won't let you stand up
-  anything else.
-- **Free and dependency-light.** No paid APIs, no hosting cost, no
-  scraping behind logins — only public RSS/Atom, the arXiv API, and
-  Hacker News' public search, and a small, stable set of Python
-  dependencies.
-- **Config-driven, not code-driven.** Repointing it at a different
-  niche entirely — semiconductors, audio/DSP production, whatever you
-  track — is editing one TOML file, not forking or patching code. See
-  [Using this for your own topic](#using-this-for-your-own-topic), or
-  [semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)
-  for a complete real-world example built on this engine.
-
-Whatever repo you point it at ends up with its own browsable Markdown
-archive of every day's digest, committed alongside its config — a
-running, versioned record of what it found, not just an inbox that
-scrolls away.
+Every run also leaves a browsable Markdown archive in your repo — not
+just an email that scrolls away.
 
 ## Contents
 
