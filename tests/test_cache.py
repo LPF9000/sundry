@@ -1,7 +1,7 @@
 import json
 from datetime import UTC, datetime, timedelta
 
-from tech_news_digest.cache import SeenCache
+from sundry.cache import SeenCache
 
 URL = "https://example.com/article"
 

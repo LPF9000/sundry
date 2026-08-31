@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from tech_news_digest.config import ConfigError, load_config
+from sundry.config import ConfigError, load_config
 
 EXAMPLE_CONFIG = Path(__file__).resolve().parent.parent / "examples" / "feeds.toml"
 

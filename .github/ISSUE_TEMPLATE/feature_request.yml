@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Want a digest for your own topic? You don't need an issue for
-        that, and you don't need to fork either — run `tech-news-digest
+        that, and you don't need to fork either — run `sundry
         init` in your own repo, or see the README's "Using this for your
         own topic" section. This form is for changes to the tool itself.
 
@@ -32,7 +32,7 @@ body:
       options:
         - New fetcher type (a source that isn't RSS/arXiv/HN)
         - Change to classification/dedupe/rendering logic
-        - Change to `tech-news-digest init` scaffolding
+        - Change to `sundry init` scaffolding
         - Something else
     validations:
       required: true

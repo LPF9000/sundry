@@ -1,8 +1,8 @@
 import subprocess
 
-from tech_news_digest.cli import main
-from tech_news_digest.config import load_config
-from tech_news_digest.scaffold import _detect_repo_slug, run_init
+from sundry.cli import main
+from sundry.config import load_config
+from sundry.scaffold import _detect_repo_slug, run_init
 
 
 def test_init_creates_config_and_workflow(tmp_path):
@@ -27,7 +27,7 @@ def test_init_config_is_valid_and_ready_to_build():
     # same validation a real feeds.toml has to pass.
     import tomllib
 
-    from tech_news_digest.scaffold import CONFIG_TEMPLATE
+    from sundry.scaffold import CONFIG_TEMPLATE
 
     tomllib.loads(CONFIG_TEMPLATE)  # no TOML syntax errors
 
@@ -39,7 +39,7 @@ def test_init_config_loads_via_load_config(tmp_path):
 
 
 def test_init_config_explains_itself_for_a_non_technical_reader():
-    from tech_news_digest.scaffold import CONFIG_TEMPLATE
+    from sundry.scaffold import CONFIG_TEMPLATE
 
     assert "STEP 1" in CONFIG_TEMPLATE
     assert "STEP 2" in CONFIG_TEMPLATE
@@ -77,7 +77,7 @@ def test_init_config_example_blocks_are_valid_toml_once_uncommented():
     # no example.
     import tomllib
 
-    from tech_news_digest.scaffold import CONFIG_TEMPLATE
+    from sundry.scaffold import CONFIG_TEMPLATE
 
     lines = CONFIG_TEMPLATE.splitlines()
     lines = _uncomment_block(lines, "# [[rss_sources]]")
@@ -90,7 +90,7 @@ def test_init_config_example_blocks_are_valid_toml_once_uncommented():
 
 
 def test_init_workflow_pins_the_default_ref(tmp_path):
-    from tech_news_digest.scaffold import DEFAULT_ENGINE_REF
+    from sundry.scaffold import DEFAULT_ENGINE_REF
 
     run_init([str(tmp_path)])
     workflow_text = (tmp_path / ".github" / "workflows" / "digest.yml").read_text()
@@ -104,18 +104,18 @@ def test_init_ref_is_configurable(tmp_path):
 
 
 def test_init_ci_workflow_pins_the_default_ref(tmp_path):
-    from tech_news_digest.scaffold import DEFAULT_ENGINE_REF
+    from sundry.scaffold import DEFAULT_ENGINE_REF
 
     run_init([str(tmp_path)])
     ci_text = (tmp_path / ".github" / "workflows" / "ci.yml").read_text()
-    assert f'tech-news-digest.git@{DEFAULT_ENGINE_REF}"' in ci_text
+    assert f'sundry.git@{DEFAULT_ENGINE_REF}"' in ci_text
 
 
 def test_init_ci_workflow_has_the_three_jobs(tmp_path):
     run_init([str(tmp_path)])
     ci_text = (tmp_path / ".github" / "workflows" / "ci.yml").read_text()
     assert "reviewdog/action-actionlint" in ci_text  # lint-workflows
-    assert "tech-news-digest --config config/feeds.toml" in ci_text  # validate-config
+    assert "sundry --config config/feeds.toml" in ci_text  # validate-config
     assert "gitleaks" in ci_text  # scan-secrets
 
 
@@ -149,7 +149,7 @@ def test_init_agents_md_has_the_schema_and_is_valid_toml(tmp_path):
 
 
 def test_init_agents_md_pins_the_ref_and_detected_repo_slug(tmp_path):
-    from tech_news_digest.scaffold import DEFAULT_ENGINE_REF
+    from sundry.scaffold import DEFAULT_ENGINE_REF
 
     subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
     subprocess.run(
@@ -160,7 +160,7 @@ def test_init_agents_md_pins_the_ref_and_detected_repo_slug(tmp_path):
     )
     run_init([str(tmp_path)])
     agents_text = (tmp_path / "AGENTS.md").read_text()
-    assert f"tech-news-digest.git@{DEFAULT_ENGINE_REF}" in agents_text
+    assert f"sundry.git@{DEFAULT_ENGINE_REF}" in agents_text
     assert "gh workflow run digest.yml --repo someone/some-repo" in agents_text
 
 

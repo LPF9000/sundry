@@ -34,31 +34,31 @@ LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 EPILOG = """\
 examples:
   # Scaffold config/feeds.toml + a caller workflow in a new topic repo
-  tech-news-digest init
+  sundry init
 
   # Build today's digest using config/feeds.toml, exactly as a daily workflow does
-  tech-news-digest
+  sundry
 
   # Preview a build without touching committed state (safe to run anytime)
-  tech-news-digest --html-output /tmp/preview.html --no-write-cache --no-archive
+  sundry --html-output /tmp/preview.html --no-write-cache --no-archive
 
   # Build AND send it — needs MAIL_USERNAME/MAIL_PASSWORD in the environment
   # (and a recipient, via --recipient or a DIGEST_RECIPIENT env var)
-  tech-news-digest --send-email
+  sundry --send-email
 
   # Point at a config living somewhere else (e.g. a different topic)
-  tech-news-digest --config path/to/feeds.toml
+  sundry --config path/to/feeds.toml
 
-Setting this up for a new topic? Run `tech-news-digest init` in that
+Setting this up for a new topic? Run `sundry init` in that
 repo, or see AGENTS.md if you're an AI agent. Full docs: README.md.
 """
 
-logger = logging.getLogger("tech_news_digest")
+logger = logging.getLogger("sundry")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="tech-news-digest",
+        prog="sundry",
         description=__doc__,
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,

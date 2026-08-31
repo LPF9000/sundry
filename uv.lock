@@ -685,7 +685,7 @@ wheels = [
 ]
 
 [[package]]
-name = "tech-news-digest"
+name = "sundry"
 version = "1.0.0"
 source = { editable = "." }
 dependencies = [

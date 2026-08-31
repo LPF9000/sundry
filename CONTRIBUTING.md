@@ -5,7 +5,7 @@ Thanks for considering a contribution. This project has two kinds of
 
 - **You want your own topic digest** (different field, different sources).
   You don't need to contribute anything here, and you don't need to fork
-  either — run `tech-news-digest init` in your own repo, or see "Using
+  either — run `sundry init` in your own repo, or see "Using
   this for your own topic" in the [README](./README.md). No permission
   or PR needed.
 - **You want to improve the *engine itself*** (a new fetcher type, a
@@ -40,12 +40,12 @@ uv run mypy src                  # type-check
 uv run pytest                    # unit tests
 ```
 
-If you touched `examples/feeds.toml` or `src/tech_news_digest/scaffold.py`,
+If you touched `examples/feeds.toml` or `src/sundry/scaffold.py`,
 sanity-check the example still builds a digest from live sources without
 writing anything back to committed state:
 
 ```bash
-uv run python -m tech_news_digest \
+uv run python -m sundry \
   --config examples/feeds.toml \
   --html-output /tmp/preview.html \
   --no-write-cache --no-archive
@@ -58,7 +58,7 @@ and commit the updated `uv.lock` alongside it.
 
 - **Small and scoped.** One fix, one feature — not a drive-by rewrite of
   something unrelated.
-- **Tests included** for anything in `src/tech_news_digest/` — the
+- **Tests included** for anything in `src/sundry/` — the
   existing suite runs against mocked HTTP (see `tests/test_fetchers.py`
   for the pattern), never live network calls.
 - **No emoji, no AI-authorship attribution** in code, docs, or commit
@@ -67,7 +67,7 @@ and commit the updated `uv.lock` alongside it.
 - **Notable change?** Add an entry to [CHANGELOG.md](./CHANGELOG.md)
   under an `[Unreleased]` heading (add one if it's not there yet) — a
   one-liner is enough. Bumping the version in `pyproject.toml` and
-  `src/tech_news_digest/__init__.py` is a separate, deliberate step the
+  `src/sundry/__init__.py` is a separate, deliberate step the
   maintainer takes when cutting a release, not part of a normal PR.
 
 ## Reporting a security issue

@@ -1,4 +1,4 @@
-"""Enables `python -m tech_news_digest`."""
+"""Enables `python -m sundry`."""
 
 from __future__ import annotations
 

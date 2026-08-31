@@ -10,7 +10,7 @@ A daily digest pipeline: fetch public RSS/Atom feeds + the arXiv API + the
 Hacker News (Algolia) API → dedupe → classify into topic categories by
 keyword → render an HTML email + Markdown archive entry → email it, via a
 scheduled GitHub Actions workflow. The Python package
-(`src/tech_news_digest/`) is generic — it knows nothing about any
+(`src/sundry/`) is generic — it knows nothing about any
 particular topic, and this repo ships no default topic of its own.
 All topic-specific content (sources, categories, keywords) lives in one
 file — `feeds.toml` — that lives in the *user's* repo, not here.
@@ -29,7 +29,7 @@ fork this repository, and do not clone or edit anything in this
 repository to do it.** Everything below happens in the **user's own
 repo** — new or existing, unrelated to this one. The only legitimate
 reason to have a checkout of *this* repo open at all is to read this
-file or README.md; `tech-news-digest init` and the reusable workflow it
+file or README.md; `sundry init` and the reusable workflow it
 sets up both install the engine straight from GitHub at run time (via
 `uvx` and `uses:` respectively), so nothing here ever needs a local
 checkout, and nothing in `src/`, `examples/`, or this repo's own config
@@ -50,7 +50,7 @@ should be touched as part of this task. Concretely:
    where every file below gets created — not here), run:
 
    ```bash
-   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
+   uvx --from "git+https://github.com/LPF9000/sundry.git@main" sundry init
    ```
 
    This writes five files in the **current directory** — wherever you
@@ -72,8 +72,8 @@ should be touched as part of this task. Concretely:
    of this repo needed):
 
    ```bash
-   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" \
-     tech-news-digest --config config/feeds.toml \
+   uvx --from "git+https://github.com/LPF9000/sundry.git@main" \
+     sundry --config config/feeds.toml \
      --html-output /tmp/preview.html --no-write-cache --no-archive
    ```
 
@@ -187,7 +187,7 @@ anything.
   narrate your own process, don't reference or quote the request that
   prompted the change.
 - **Source/category data belongs in a `feeds.toml`, never in `src/`.**
-  If a task seems to require editing `src/tech_news_digest/` just to add
+  If a task seems to require editing `src/sundry/` just to add
   a source or keyword, something is wrong — stop and reconsider; see
   "set this up for a new topic" above. This repo's own `examples/` is a
   real config used only to exercise this repo's own CI, not a shipped

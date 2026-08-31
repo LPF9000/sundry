@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tech-news-digest"
+name = "sundry"
 version = "1.0.0"
 description = "Reusable, config-driven daily news digest builder — bring your own topic, no fork needed"
 readme = "README.md"
@@ -16,9 +16,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/LPF9000/tech-news-digest"
-Repository = "https://github.com/LPF9000/tech-news-digest"
-Issues = "https://github.com/LPF9000/tech-news-digest/issues"
+Homepage = "https://github.com/LPF9000/sundry"
+Repository = "https://github.com/LPF9000/sundry"
+Issues = "https://github.com/LPF9000/sundry/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -30,7 +30,7 @@ dev = [
 ]
 
 [project.scripts]
-tech-news-digest = "tech_news_digest.cli:main"
+sundry = "sundry.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -43,7 +43,7 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["tech_news_digest"]
+known-first-party = ["sundry"]
 
 [tool.mypy]
 python_version = "3.11"

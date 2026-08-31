@@ -12,7 +12,7 @@ import requests
 
 from ..models import Article
 
-USER_AGENT = "Mozilla/5.0 (compatible; tech-news-digest/1.0; +https://github.com/lpf9000/tech-news-digest)"
+USER_AGENT = "Mozilla/5.0 (compatible; sundry/1.0; +https://github.com/lpf9000/sundry)"
 HTTP_TIMEOUT_SECONDS = 20
 DEFAULT_MAX_ATTEMPTS = 3
 DEFAULT_RETRY_BACKOFF_SECONDS = 1.0

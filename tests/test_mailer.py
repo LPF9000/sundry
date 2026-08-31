@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from tech_news_digest.mailer import MailError, send_digest_email
+from sundry.mailer import MailError, send_digest_email
 
 SEND_KWARGS = {
     "html_body": "<p>hello</p>",
@@ -21,7 +21,7 @@ def test_send_digest_email_uses_implicit_tls_for_port_465(monkeypatch):
     smtp = MagicMock()
     smtp.__enter__.return_value = smtp
     smtp_ssl_cls = MagicMock(return_value=smtp)
-    monkeypatch.setattr("tech_news_digest.mailer.smtplib.SMTP_SSL", smtp_ssl_cls)
+    monkeypatch.setattr("sundry.mailer.smtplib.SMTP_SSL", smtp_ssl_cls)
 
     send_digest_email(server="smtp.gmail.com", port=465, **SEND_KWARGS)
 
@@ -44,7 +44,7 @@ def test_send_digest_email_uses_starttls_for_other_ports(monkeypatch):
     smtp = MagicMock()
     smtp.__enter__.return_value = smtp
     smtp_cls = MagicMock(return_value=smtp)
-    monkeypatch.setattr("tech_news_digest.mailer.smtplib.SMTP", smtp_cls)
+    monkeypatch.setattr("sundry.mailer.smtplib.SMTP", smtp_cls)
 
     send_digest_email(server="smtp.example.com", port=587, **SEND_KWARGS)
 
@@ -57,7 +57,7 @@ def test_send_digest_email_wraps_auth_failure_as_mail_error(monkeypatch):
     smtp = MagicMock()
     smtp.__enter__.return_value = smtp
     smtp.login.side_effect = smtplib.SMTPAuthenticationError(535, b"5.7.8 Username and Password not accepted")
-    monkeypatch.setattr("tech_news_digest.mailer.smtplib.SMTP_SSL", MagicMock(return_value=smtp))
+    monkeypatch.setattr("sundry.mailer.smtplib.SMTP_SSL", MagicMock(return_value=smtp))
 
     with pytest.raises(MailError, match="Username and Password not accepted"):
         send_digest_email(server="smtp.gmail.com", port=465, **SEND_KWARGS)
@@ -65,7 +65,7 @@ def test_send_digest_email_wraps_auth_failure_as_mail_error(monkeypatch):
 
 def test_send_digest_email_wraps_connection_failure_as_mail_error(monkeypatch):
     monkeypatch.setattr(
-        "tech_news_digest.mailer.smtplib.SMTP_SSL",
+        "sundry.mailer.smtplib.SMTP_SSL",
         MagicMock(side_effect=ConnectionRefusedError("connection refused")),
     )
 
