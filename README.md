@@ -77,24 +77,28 @@ cd my-news-digest
 uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
 ```
 
-This writes three files in the current directory, already pointed at
+This writes five files in the current directory, already pointed at
 the right repo and ref, nothing to copy-paste or get wrong:
 `config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
-and `.github/workflows/ci.yml` (lints workflow YAML, validates the
+`.github/workflows/ci.yml` (lints workflow YAML, validates the
 config actually builds, and scans the repo for leaked secrets on every
-push/PR — see [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)).
-It prints the exact next steps when it runs, repeated below.
+push/PR — see [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)),
+and `AGENTS.md` + `CLAUDE.md` (a scoped copy of the schema and setup
+steps for *this* repo, so an AI agent opened here already has
+everything it needs — see [For AI agents](#for-ai-agents)). It prints
+the exact next steps when it runs, repeated below.
 
 **3. Fill in the TODOs in `config/feeds.toml`.**
 
-See [Tuning the digest](#tuning-the-digest) for the schema, or hand the
-file to an AI agent (see [For AI agents](#for-ai-agents) below) along
-with a description of your topic and let it do this step.
+See [Tuning the digest](#tuning-the-digest) for the schema, or open an
+AI coding agent in this repo (see [For AI agents](#for-ai-agents)
+below) and describe your topic — it already has the new `AGENTS.md`
+here to work from.
 
 **4. Commit and push:**
 
 ```bash
-git add config/feeds.toml .github/workflows/digest.yml .github/workflows/ci.yml
+git add config/feeds.toml .github/workflows/digest.yml .github/workflows/ci.yml AGENTS.md CLAUDE.md
 git commit -m "Set up daily digest"
 git push -u origin main
 ```
@@ -179,6 +183,13 @@ is enough for a capable agent to run `tech-news-digest init` (via `uvx`
 settings to fill in in your repo (it can't set secrets for you — that's
 a manual step by design). Every file it creates or edits lands in
 *your* repo, not this one.
+
+`init` also writes an `AGENTS.md` + `CLAUDE.md` pair into *your* repo,
+scoped to it specifically — the schema, the never-do-this boundaries,
+and the exact `gh` commands for your repo, with nothing to fetch or
+clone. So the moment `init` has run, close this repo (or never open it
+at all) and just work from the agent inside your new repo — it already
+has everything the prompt above would have needed this repo for.
 
 ## Contents
 
@@ -312,8 +323,9 @@ not to run on a schedule.
 A repo that uses the reusable workflow (like
 [semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest))
 gets its own `config/feeds.toml`, `.github/workflows/digest.yml`,
-`.github/workflows/ci.yml`, `digests/YYYY-MM-DD.md` archive, and
-`state/seen.json` dedupe cache — none of that lives in this repo.
+`.github/workflows/ci.yml`, `AGENTS.md`, `CLAUDE.md`,
+`digests/YYYY-MM-DD.md` archive, and `state/seen.json` dedupe cache —
+none of that lives in this repo.
 
 `tech_news_digest` is a proper installable Python package (not a loose
 script): typed with dataclasses and `from __future__ import annotations`
