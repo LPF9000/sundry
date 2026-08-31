@@ -22,6 +22,24 @@ jobs:
         with:
           fail_level: error
 
+  scan-secrets:
+    name: Scan for leaked secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history, not just the latest commit
+      # Same tool `tech-news-digest init` scaffolds for callers (see
+      # scaffold.py's CI_WORKFLOW_TEMPLATE) — the raw gitleaks CLI via its
+      # official image, not the gitleaks-action wrapper (which requires a
+      # paid license for organization-owned repos). Intentionally not
+      # version-pinned, unlike everything else here — a secret scanner is
+      # more useful current than reproducible.
+      - name: gitleaks
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest \
+            detect --source /repo --no-banner -v
+
   lint-and-test:
     name: Lint & test (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
