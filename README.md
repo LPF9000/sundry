@@ -1,7 +1,11 @@
-# Sundry
+<p align="center">
+  <img src="./.github/assets/banner.png" alt="Sundry" width="600">
+</p>
 
-[![CI](https://github.com/LPF9000/sundry/actions/workflows/ci.yml/badge.svg)](https://github.com/LPF9000/sundry/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+<p align="center">
+  <a href="https://github.com/LPF9000/sundry/actions/workflows/ci.yml"><img src="https://github.com/LPF9000/sundry/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
 
 A little pipeline that watches whatever corner of the internet you
 care about — RSS feeds, arXiv, Hacker News, whatever — and emails you
