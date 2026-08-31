@@ -9,7 +9,7 @@ import requests
 
 from ..models import Article
 from ..text import strip_html
-from .common import HTTP_TIMEOUT_SECONDS, FetchOutcome
+from .common import FetchOutcome, request_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +22,11 @@ def fetch_hn_query(query: str, session: requests.Session) -> FetchOutcome:
     """Run one Hacker News search, keeping only stories with `MIN_POINTS`+."""
     source_name = f"Hacker News: {query!r}"
     try:
-        response = session.get(
+        response = request_with_retries(
+            session,
             HN_ALGOLIA_SEARCH_URL,
             params={"query": query, "tags": "story", "hitsPerPage": str(HITS_PER_QUERY)},
-            timeout=HTTP_TIMEOUT_SECONDS,
         )
-        response.raise_for_status()
         data = response.json()
     except (requests.RequestException, ValueError) as exc:
         logger.warning("Hacker News search failed for %r: %s", query, exc)

@@ -1,0 +1,48 @@
+# Changelog
+
+Notable changes to this project. Format loosely follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [1.0.0]
+
+First stable release.
+
+### Engine
+
+- Fetches from RSS/Atom feeds, the arXiv API, and Hacker News (Algolia)
+  search; classifies items into configured topic categories by keyword;
+  dedupes against a persisted seen-URL cache (~45-day TTL); renders both
+  an HTML email and a Markdown archive entry.
+- Config-driven: every topic-specific detail (sources, categories,
+  keywords) lives in one `feeds.toml`, read fresh on every run — no code
+  changes needed to point the tool at a new subject.
+- Network calls retry transient failures (timeouts, connection errors,
+  5xx responses) with backoff; a 4xx response fails fast instead of
+  retrying a request that can't succeed.
+- A single source failing (dead feed, blocked request, API hiccup) never
+  aborts a run — it's named in the digest footer instead.
+
+### Setup and reuse
+
+- `tech-news-digest init` scaffolds a new topic repo's `config/feeds.toml`
+  and both workflow files (the scheduled run, and a CI that lints
+  workflows, validates the config, and scans for leaked secrets) in one
+  command via `uvx` — no local install or clone.
+- `.github/workflows/digest-reusable.yml` lets any repo pull in the
+  engine without forking or copying code, installed straight from this
+  repo's `main` branch at run time (no release tags to track).
+- `AGENTS.md` gives an AI coding agent everything it needs to set this up
+  for a new topic end to end, including the boundary that setup always
+  happens in the *caller's* repo, never this one.
+
+### Tooling
+
+- [uv](https://docs.astral.sh/uv/) for dependency management, with a
+  committed lockfile.
+- ruff (lint + format), mypy, and a pytest suite covering fetchers,
+  classification, caching, rendering, config validation, scaffolding,
+  and the CLI — all against mocked HTTP, no live network calls in the
+  unit suite.
+- [actionlint](https://github.com/rhysd/actionlint) on every workflow
+  file; [gitleaks](https://github.com/gitleaks/gitleaks) secret scanning
+  on every push/PR, both here and in every repo `init` scaffolds.

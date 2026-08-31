@@ -62,7 +62,13 @@ and commit the updated `uv.lock` alongside it.
   existing suite runs against mocked HTTP (see `tests/test_fetchers.py`
   for the pattern), never live network calls.
 - **No emoji, no AI-authorship attribution** in code, docs, or commit
-  messages — see the note at the top of the README if that's unclear.
+  messages — see AGENTS.md's "Conventions to respect in this repo" if
+  that's unclear.
+- **Notable change?** Add an entry to [CHANGELOG.md](./CHANGELOG.md)
+  under an `[Unreleased]` heading (add one if it's not there yet) — a
+  one-liner is enough. Bumping the version in `pyproject.toml` and
+  `src/tech_news_digest/__init__.py` is a separate, deliberate step the
+  maintainer takes when cutting a release, not part of a normal PR.
 
 ## Reporting a security issue
 
