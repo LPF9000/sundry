@@ -53,9 +53,12 @@ should be touched as part of this task. Concretely:
    uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
    ```
 
-   This writes `config/feeds.toml` and `.github/workflows/digest.yml` in
-   the **current directory** — wherever you ran it — already wired up
-   correctly. It prints the exact next steps when it runs.
+   This writes three files in the **current directory** — wherever you
+   ran it — already wired up correctly: `config/feeds.toml`,
+   `.github/workflows/digest.yml` (the scheduled run), and
+   `.github/workflows/ci.yml` (lints workflow YAML, validates the
+   config, and scans for leaked secrets on every push/PR — needs no
+   further setup). It prints the exact next steps when it runs.
 2. Fill in the TODOs it left in that repo's `config/feeds.toml` for the
    user's topic — use the schema reference below, or just do it yourself
    from their description of the topic and any sources/keywords they
@@ -79,9 +82,9 @@ should be touched as part of this task. Concretely:
    `"0 */6 * * *"` for every 6 hours, `"0 12 * * 1-5"` for weekdays only.
    GitHub Actions cron is always UTC; the dedupe window (~45 days) works
    fine at any frequency.
-5. Commit and push `config/feeds.toml` and `.github/workflows/digest.yml`
-   in the user's repo, if you have write access to it; otherwise tell
-   them to.
+5. Commit and push `config/feeds.toml`, `.github/workflows/digest.yml`,
+   and `.github/workflows/ci.yml` in the user's repo, if you have write
+   access to it; otherwise tell them to.
 6. Tell the user to set three things in their repo's GitHub settings —
    this is the only manual step, you cannot do it for them, and **all
    three are required**. In practice the middle one is the one people

@@ -11,8 +11,10 @@ def test_init_creates_config_and_workflow(tmp_path):
 
     config_path = tmp_path / "config" / "feeds.toml"
     workflow_path = tmp_path / ".github" / "workflows" / "digest.yml"
+    ci_path = tmp_path / ".github" / "workflows" / "ci.yml"
     assert config_path.is_file()
     assert workflow_path.is_file()
+    assert ci_path.is_file()
 
 
 def test_init_config_is_valid_and_ready_to_build():
@@ -44,6 +46,30 @@ def test_init_ref_is_configurable(tmp_path):
     run_init([str(tmp_path), "--ref", "v3.0.0"])
     workflow_text = (tmp_path / ".github" / "workflows" / "digest.yml").read_text()
     assert "digest-reusable.yml@v3.0.0" in workflow_text
+
+
+def test_init_ci_workflow_pins_the_default_ref(tmp_path):
+    from tech_news_digest.scaffold import DEFAULT_ENGINE_REF
+
+    run_init([str(tmp_path)])
+    ci_text = (tmp_path / ".github" / "workflows" / "ci.yml").read_text()
+    assert f'tech-news-digest.git@{DEFAULT_ENGINE_REF}"' in ci_text
+
+
+def test_init_ci_workflow_has_the_three_jobs(tmp_path):
+    run_init([str(tmp_path)])
+    ci_text = (tmp_path / ".github" / "workflows" / "ci.yml").read_text()
+    assert "reviewdog/action-actionlint" in ci_text  # lint-workflows
+    assert "tech-news-digest --config config/feeds.toml" in ci_text  # validate-config
+    assert "gitleaks" in ci_text  # scan-secrets
+
+
+def test_init_refuses_to_overwrite_ci_workflow_without_force(tmp_path):
+    ci_path = tmp_path / ".github" / "workflows" / "ci.yml"
+    ci_path.parent.mkdir(parents=True)
+    ci_path.write_text("placeholder", encoding="utf-8")
+    assert run_init([str(tmp_path)]) == 1
+    assert ci_path.read_text() == "placeholder"
 
 
 def test_init_refuses_to_overwrite_without_force(tmp_path, capsys):
