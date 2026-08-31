@@ -74,7 +74,7 @@ used `gh repo create --clone` above, which already did this):
 git clone https://github.com/<your-username>/my-news-digest.git
 cd my-news-digest
 
-uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
+uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
 ```
 
 This writes three files in the current directory, already pointed at
@@ -142,9 +142,13 @@ then `source ~/.zshrc` (or open a new terminal) and just run `run-digest`.
 
 That's the entire setup. Nothing to install beyond `uv`, no copy of
 `src/tech_news_digest/` to keep in sync with this repo's own updates —
-`@v2.0.0` always installs this project's tagged release straight from
-GitHub at run time, both for `init` and for the daily run itself. This
-mirrors how a real GitHub Action is meant to be consumed (see
+`@main` always installs this project's current code straight from
+GitHub at run time, both for `init` and for the daily run itself; this
+project doesn't cut formal releases, so main is the documented, tested
+path rather than a moving target you'd need to keep re-pinning. Pin to a
+tag or commit SHA instead if you'd rather trade that convenience for
+stability against upstream changes. This mirrors how a real GitHub
+Action is meant to be consumed (see
 [GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
 not a fork-and-diverge template.
 
