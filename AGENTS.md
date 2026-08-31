@@ -13,10 +13,14 @@ scheduled GitHub Actions workflow. The Python package
 (`src/tech_news_digest/`) is generic — it knows nothing about any
 particular topic, and this repo ships no default topic of its own.
 All topic-specific content (sources, categories, keywords) lives in one
-file — `feeds.toml` — that lives in the *user's* repo, not here. See
-`examples/feeds.toml` for an annotated example, and
-[semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)
-for a complete real-world instance built on this engine.
+file — `feeds.toml` — that lives in the *user's* repo, not here.
+`examples/feeds.toml` is a real, full semiconductor/DV config (same
+content as
+[semiconductor-news-digest](https://github.com/LPF9000/semiconductor-news-digest)),
+kept here purely so this repo's own CI builds and emails a genuinely
+substantive digest on every PR — this repo still has no scheduled
+workflow of its own and ships no default topic; only
+semiconductor-news-digest actually runs on a cron.
 
 ## The most common task: set this up for a new topic
 
@@ -92,10 +96,16 @@ should be touched as part of this task. Concretely:
    - **Settings > Actions > General > Workflow permissions** → "Read and
      write permissions" (so it can commit the daily archive)
 7. Tell the user to test it immediately rather than waiting for the
-   schedule: Actions tab > **Daily Digest** > **Run workflow**. A green
-   run means check the inbox and the new `digests/` folder; a red run
-   means open the failed step's log — the three failure modes above
-   cover the common cases.
+   schedule — this sends a real email to their real inbox on demand, and
+   is the way to confirm setup (or any config change) actually works:
+   Actions tab > **Daily Digest** > **Run workflow**, or, with the `gh`
+   CLI, `gh workflow run digest.yml --repo <owner>/<repo>`. If you have
+   shell access and the user runs this often, offer to add an alias to
+   their `~/.zshrc`/`~/.bashrc`:
+   `alias run-digest='gh workflow run digest.yml --repo <owner>/<repo>'`.
+   A green run means check the inbox and the new `digests/` folder; a
+   red run means open the failed step's log — the three failure modes
+   above cover the common cases.
 8. That's the entire setup. No `pip install`, no cloning this repo, no
    copying `src/`. The reusable workflow installs the digest engine
    straight from this repo's tagged release at run time.
@@ -171,9 +181,10 @@ anything.
 - **Source/category data belongs in a `feeds.toml`, never in `src/`.**
   If a task seems to require editing `src/tech_news_digest/` just to add
   a source or keyword, something is wrong — stop and reconsider; see
-  "set this up for a new topic" above. This repo's own `examples/`
-  holds a schema demo, not a real topic — a real topic's config lives in
-  the user's own repo, not here.
+  "set this up for a new topic" above. This repo's own `examples/` is a
+  real config used only to exercise this repo's own CI, not a shipped
+  topic — a *new* topic's config always lives in the user's own repo,
+  not here.
 - **Keep secrets out of committed files and logs.** Nothing in this repo
   should ever need a secret to run a dry build (`--no-write-cache
   --no-archive` needs no credentials at all).

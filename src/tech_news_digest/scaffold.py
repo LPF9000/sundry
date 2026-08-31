@@ -12,11 +12,15 @@ or an AI agent to fill in.
 from __future__ import annotations
 
 import argparse
+import re
+import subprocess
 import sys
 from pathlib import Path
 
 # Keep in sync with digest-reusable.yml's own `inputs.digest-ref.default`.
 DEFAULT_ENGINE_REF = "v2.0.0"
+
+_GITHUB_REMOTE_RE = re.compile(r"github\.com[:/]([^/]+)/(.+?)(?:\.git)?/?$")
 
 CONFIG_TEMPLATE = """\
 # Source & topic configuration for your digest.
@@ -136,13 +140,44 @@ Next steps:
    `cron` line in {workflow_path} for a different time or frequency
    (see the comment above it).
 
-4. Test it now rather than waiting for the schedule: on GitHub, Actions
-   tab > Daily Digest > Run workflow > Run workflow. Green check: check
-   your inbox and this repo's new digests/ folder. Red X: open the
-   failed step's log — see
+4. Test it now rather than waiting for the schedule — do this again any
+   time you change {config_path} too, not just once. Sends a real email
+   to your real inbox on demand:
+
+     Web UI: Actions tab > Daily Digest > Run workflow > Run workflow.
+
+     gh CLI (gh auth login once if needed):
+       gh workflow run digest.yml --repo {repo_slug}
+
+   Running this a lot? Add a shell alias (~/.zshrc or ~/.bashrc):
+     alias run-digest='gh workflow run digest.yml --repo {repo_slug}'
+
+   Green check: check your inbox and this repo's new digests/ folder.
+   Red X: open the failed step's log — see
    https://github.com/LPF9000/tech-news-digest/blob/main/README.md#troubleshooting
    for the common causes (an empty recipient is by far the most common).
 """
+
+
+def _detect_repo_slug(directory: Path) -> str:
+    """Best-effort 'owner/repo' from the directory's git remote, for exact copy-paste commands.
+
+    Falls back to a placeholder if there's no git remote to read (not a
+    repo yet, no 'origin', not a GitHub URL) — never raises.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(directory), "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "<owner>/<repo>"
+    if result.returncode != 0:
+        return "<owner>/<repo>"
+    match = _GITHUB_REMOTE_RE.search(result.stdout.strip())
+    return f"{match.group(1)}/{match.group(2)}" if match else "<owner>/<repo>"
 
 
 def parse_init_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -190,5 +225,6 @@ def run_init(argv: list[str] | None = None) -> int:
     print(f"Created {config_path}")
     print(f"Created {workflow_path}")
     print()
-    print(NEXT_STEPS.format(config_path=config_path, workflow_path=workflow_path, ref=args.ref))
+    repo_slug = _detect_repo_slug(args.directory)
+    print(NEXT_STEPS.format(config_path=config_path, workflow_path=workflow_path, ref=args.ref, repo_slug=repo_slug))
     return 0

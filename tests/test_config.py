@@ -14,7 +14,7 @@ def test_example_config_loads_and_has_a_general_category():
     assert config.rss_sources
     assert config.arxiv_sources
     assert config.hn_queries
-    assert config.digest_name == "Example Digest"
+    assert config.digest_name == "Semiconductor & DV Digest"
 
 
 def test_digest_name_defaults_when_absent(tmp_path):
