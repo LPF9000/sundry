@@ -62,6 +62,13 @@ jobs:
       # config/feeds.toml, digests/, and state/seen.json live.
       - uses: actions/checkout@v7
 
+      - name: Check recipient is configured
+        if: inputs.recipient == ''
+        run: |
+          echo "::error::No recipient email configured. This workflow was called with an empty 'recipient' input."
+          echo "::error::In THIS repository (not tech-news-digest): Settings > Secrets and variables > Actions > Variables tab > New repository variable, name it DIGEST_RECIPIENT, value your email address. Then re-run this workflow."
+          exit 1
+
       - uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: ${{ inputs.python-version }}

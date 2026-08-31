@@ -31,6 +31,17 @@ sets up both install the engine straight from GitHub at run time (via
 checkout, and nothing in `src/`, `examples/`, or this repo's own config
 should be touched as part of this task. Concretely:
 
+0. **Check for `uv` before step 1**: run `uv --version`. If that fails,
+   install it first (don't skip this — `uvx` in step 1 needs it):
+   `curl -LsSf https://astral.sh/uv/install.sh | sh` (macOS/Linux) or
+   `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`
+   (Windows), then open a new shell so `PATH` picks it up. Also confirm
+   there's a target GitHub repo to work in: if the user hasn't named one
+   yet, either create it yourself (if you have GitHub API/CLI access —
+   an empty repo, no README) or give them the exact steps: web UI at
+   [github.com/new](https://github.com/new) (leave it empty), or
+   `gh repo create <name> --private --clone && cd <name>` if they have
+   the `gh` CLI. Don't proceed to step 1 without a repo to run it in.
 1. **In the user's own repo** (this is where you run the command, and
    where every file below gets created — not here), run:
 
@@ -64,14 +75,28 @@ should be touched as part of this task. Concretely:
    `"0 */6 * * *"` for every 6 hours, `"0 12 * * 1-5"` for weekdays only.
    GitHub Actions cron is always UTC; the dedupe window (~45 days) works
    fine at any frequency.
-5. Tell the user to set three things in their repo's GitHub settings —
-   this is the only manual step, you cannot do it for them:
-   - Secrets `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an
+5. Commit and push `config/feeds.toml` and `.github/workflows/digest.yml`
+   in the user's repo, if you have write access to it; otherwise tell
+   them to.
+6. Tell the user to set three things in their repo's GitHub settings —
+   this is the only manual step, you cannot do it for them, and **all
+   three are required**. In practice the middle one is the one people
+   miss, because it's a different settings tab from the first two:
+   - Settings > Secrets and variables > Actions > **Secrets** tab:
+     `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an
      [App Password](https://myaccount.google.com/apppasswords))
-   - Variable `DIGEST_RECIPIENT` (who receives the email)
+   - Settings > Secrets and variables > Actions > **Variables** tab:
+     `DIGEST_RECIPIENT` (who receives the email) — skipping this makes
+     the workflow fail on its email step with `At least one of 'to',
+     'cc' or 'bcc' must be specified`
    - **Settings > Actions > General > Workflow permissions** → "Read and
      write permissions" (so it can commit the daily archive)
-6. That's the entire setup. No `pip install`, no cloning this repo, no
+7. Tell the user to test it immediately rather than waiting for the
+   schedule: Actions tab > **Daily Digest** > **Run workflow**. A green
+   run means check the inbox and the new `digests/` folder; a red run
+   means open the failed step's log — the three failure modes above
+   cover the common cases.
+8. That's the entire setup. No `pip install`, no cloning this repo, no
    copying `src/`. The reusable workflow installs the digest engine
    straight from this repo's tagged release at run time.
 

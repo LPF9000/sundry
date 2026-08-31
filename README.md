@@ -16,6 +16,32 @@ It pulls only from free/public sources (no scraping behind logins, no
 paid APIs). Whatever repo you point it at ends up with its own browsable
 Markdown archive of every day's digest, committed alongside its config.
 
+## Prerequisites
+
+- A GitHub account. Free tier is enough — public *and* private repos both
+  get free GitHub Actions minutes for this (a few minutes a day).
+- [uv](https://docs.astral.sh/uv/) installed on your own machine, **only**
+  to run the one scaffolding command below. Nothing else in this guide
+  touches your machine — everything after that step happens on GitHub.
+
+  ```bash
+  # macOS / Linux
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+
+  # Windows (PowerShell)
+  powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+  # already have Python + pip? this works everywhere too
+  pip install uv
+  ```
+
+  Confirm it worked: `uv --version` should print something (any recent
+  version). `uvx` (used below) ships with `uv` — nothing extra to install
+  for it. Full install docs, other package managers, uninstall
+  instructions: [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
+- A Gmail address to send *from* (any address works, including the same
+  one that receives the digest) — see [Setting up email](#setting-up-email-required-one-time).
+
 ## Using this for your own topic
 
 **You don't need to fork this repository to reuse it.**
@@ -25,32 +51,74 @@ Markdown archive of every day's digest, committed alongside its config.
 This repo publishes itself as a reusable GitHub Actions workflow
 (`.github/workflows/digest-reusable.yml`) and a scaffolding command. Any
 repo — new or existing, yours, unrelated to this one — can pull in the
-whole digest engine with one config file and a short workflow:
+whole digest engine with one config file and a short workflow. Exact
+steps, assuming the [prerequisites](#prerequisites) above are done:
 
-1. In **your own repo**, run:
+**1. Create a new, empty GitHub repository.**
 
-   ```bash
-   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
-   ```
+Web UI: go to [github.com/new](https://github.com/new), enter a name
+(e.g. `my-news-digest`), leave it empty (don't check "Add a README"),
+choose Public or Private (either works), click **Create repository**.
 
-   This writes `config/feeds.toml` and `.github/workflows/digest.yml`
-   for you, already pointed at the right repo and ref — nothing to
-   copy-paste or get wrong. It prints the exact next steps when it runs.
-2. Fill in the TODOs it left in `config/feeds.toml` — see
-   [Tuning the digest](#tuning-the-digest) for the schema, or hand the
-   file to an AI agent (see [For AI agents](#for-ai-agents) below) along
-   with a description of your topic.
-3. In your repo's settings, set secrets `MAIL_USERNAME`/`MAIL_PASSWORD`
-   and variable `DIGEST_RECIPIENT` (same steps as
-   [Setting up email](#setting-up-email-required-one-time) below, just in
-   *your* repo), and flip **Workflow permissions** to "Read and write."
+Or, if you have the [`gh` CLI](https://cli.github.com/):
 
-That's the entire setup. Nothing to clone, no Python to install locally,
-no copy of `src/tech_news_digest/` to keep in sync with this repo's own
-updates — `@v2.0.0` always installs this project's tagged release
-straight from GitHub at run time, both for `init` and for the daily run
-itself. This mirrors how a real GitHub Action is meant to be consumed
-(see
+```bash
+gh repo create my-news-digest --private --clone
+cd my-news-digest
+```
+
+**2. Clone it and run the scaffolder** (skip the `git clone`/`cd` if you
+used `gh repo create --clone` above, which already did this):
+
+```bash
+git clone https://github.com/<your-username>/my-news-digest.git
+cd my-news-digest
+
+uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
+```
+
+This writes two files in the current directory — `config/feeds.toml` and
+`.github/workflows/digest.yml` — already pointed at the right repo and
+ref, nothing to copy-paste or get wrong. It prints the exact next steps
+when it runs, repeated below.
+
+**3. Fill in the TODOs in `config/feeds.toml`.**
+
+See [Tuning the digest](#tuning-the-digest) for the schema, or hand the
+file to an AI agent (see [For AI agents](#for-ai-agents) below) along
+with a description of your topic and let it do this step.
+
+**4. Commit and push:**
+
+```bash
+git add config/feeds.toml .github/workflows/digest.yml
+git commit -m "Set up daily digest"
+git push -u origin main
+```
+
+**5. In this new repo's GitHub settings**, set the three things below —
+see [Setting up email](#setting-up-email-required-one-time) for the
+exact clicks. All three are required; missing any one of them is the
+most common thing that goes wrong (see [Troubleshooting](#troubleshooting)):
+
+- Secrets `MAIL_USERNAME` and `MAIL_PASSWORD` (**Secrets** tab)
+- Variable `DIGEST_RECIPIENT` (**Variables** tab — a different tab from
+  the secrets above, easy to miss)
+- **Workflow permissions** set to "Read and write" (**Settings > Actions
+  > General**)
+
+**6. Test it now, don't wait for the schedule.** In this repo on GitHub,
+go to the **Actions** tab > **Daily Digest** (in the left sidebar) > **Run
+workflow** > **Run workflow**. Watch it run — it takes under a minute.
+Green check: check your inbox and this repo's new `digests/` folder.
+Red X: open the failed step's log, then see
+[Troubleshooting](#troubleshooting).
+
+That's the entire setup. Nothing to install beyond `uv`, no copy of
+`src/tech_news_digest/` to keep in sync with this repo's own updates —
+`@v2.0.0` always installs this project's tagged release straight from
+GitHub at run time, both for `init` and for the daily run itself. This
+mirrors how a real GitHub Action is meant to be consumed (see
 [GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
 not a fork-and-diverge template.
 
@@ -84,9 +152,11 @@ a manual step by design). Every file it creates or edits lands in
 
 ## Contents
 
+- [Prerequisites](#prerequisites)
 - [Using this for your own topic](#using-this-for-your-own-topic)
 - [For AI agents](#for-ai-agents)
 - [Setting up email (required, one-time)](#setting-up-email-required-one-time)
+- [Troubleshooting](#troubleshooting)
 - [How it works](#how-it-works)
 - [Repository layout](#repository-layout)
 - [Continuous integration](#continuous-integration)
@@ -142,6 +212,24 @@ Using a provider other than Gmail? Swap `server_address`/`server_port` in
 workflow, its `mail-server`/`mail-port` inputs) for your provider's SMTP
 details (see the
 [action-send-mail docs](https://github.com/dawidd6/action-send-mail)).
+
+## Troubleshooting
+
+Always start the same way: **Actions** tab > the failed run > the failed
+step's log. The error there is almost always one of these:
+
+| Error / symptom | Cause | Fix |
+| --- | --- | --- |
+| `At least one of 'to', 'cc' or 'bcc' must be specified` | The `DIGEST_RECIPIENT` repository **variable** isn't set (secrets and variables are different tabs — easy to set one and forget the other) | Settings > Secrets and variables > Actions > **Variables** tab > add `DIGEST_RECIPIENT` |
+| Mail step fails with an auth error (`535`, `Username and Password not accepted`) | `MAIL_USERNAME`/`MAIL_PASSWORD` wrong, or using your normal Gmail password instead of an App Password | Regenerate an [App Password](https://myaccount.google.com/apppasswords) and update the `MAIL_PASSWORD` secret |
+| `Commit archive & dedupe cache` step fails to push | Workflow permissions aren't set to "Read and write" | Settings > Actions > General > Workflow permissions > "Read and write permissions" |
+| `command not found: uvx` (on your own machine) | `uv` isn't installed, or your shell hasn't picked up the new `PATH` yet | Re-run the [install command](#prerequisites), then open a new terminal |
+| A source is missing from the digest, or shows a warning | A feed is temporarily down or blocking automated requests (returns 403/timeouts) | Nothing to fix — by design, the run continues and names the failed source in the email footer; it retries automatically the next run |
+| Digest email is basically empty on day one | Expected — see [Operational notes](#operational-notes) | Nothing to fix; from day two onward it's a real daily delta |
+| `ConfigError: ... a 'general' catch-all category is required` | `config/feeds.toml` is missing a category with `key = "general"` | Add one — see the schema in [Tuning the digest](#tuning-the-digest) |
+
+Still stuck? [Open an issue](https://github.com/LPF9000/tech-news-digest/issues)
+with the failed step's log.
 
 ## How it works
 
