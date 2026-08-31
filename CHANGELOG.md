@@ -43,6 +43,12 @@ First stable release.
   what a comment is and what "uncommenting" means, and a worked example
   category alongside the source examples. README.md gains a matching
   "Filling in config/feeds.toml without an AI agent" walkthrough.
+- README.md reordered: the table of contents now sits right after the
+  overview instead of after the setup flow, and "Using this for your
+  own topic" is trimmed to concise numbered steps — the `uvx`
+  mechanics, the reusable-workflow pinning rationale, and a plain-terms
+  explanation of what GitHub Actions actually is all moved into an
+  expanded "How it works," rather than sitting inline in the steps.
 
 ### Tooling
 

@@ -16,13 +16,32 @@ It pulls only from free/public sources (no scraping behind logins, no
 paid APIs). Whatever repo you point it at ends up with its own browsable
 Markdown archive of every day's digest, committed alongside its config.
 
+## Contents
+
+- [Prerequisites](#prerequisites)
+- [Using this for your own topic](#using-this-for-your-own-topic)
+- [How it works](#how-it-works)
+- [For AI agents](#for-ai-agents)
+- [Setting up email (required, one-time)](#setting-up-email-required-one-time)
+- [Troubleshooting](#troubleshooting)
+- [Repository layout](#repository-layout)
+- [Continuous integration](#continuous-integration)
+- [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)
+- [Filling in config/feeds.toml without an AI agent](#filling-in-configfeedstoml-without-an-ai-agent)
+- [Tuning the digest](#tuning-the-digest)
+- [Local development](#local-development)
+- [Example: semiconductor-news-digest](#example-semiconductor-news-digest)
+- [Operational notes](#operational-notes)
+- [Contributing](#contributing)
+- [License](#license)
+
 ## Prerequisites
 
-- A GitHub account. Free tier is enough — public *and* private repos both
-  get free GitHub Actions minutes for this (a few minutes a day).
-- [uv](https://docs.astral.sh/uv/) installed on your own machine, **only**
-  to run the one scaffolding command below. Nothing else in this guide
-  touches your machine — everything after that step happens on GitHub.
+- A GitHub account. Free tier is enough — Actions minutes are free for
+  this on both public and private repos.
+- [uv](https://docs.astral.sh/uv/) installed on your own machine — the
+  *only* local install this guide needs. Everything after that happens
+  on GitHub. No separate Python install required; `uv` manages its own.
 
   ```bash
   # macOS / Linux
@@ -35,15 +54,9 @@ Markdown archive of every day's digest, committed alongside its config.
   pip install uv
   ```
 
-  Confirm it worked: `uv --version` should print something (any recent
-  version). `uvx` (used below) ships with `uv` — nothing extra to install
-  for it. Full install docs, other package managers, uninstall
-  instructions: [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
-
-  **No separate Python install needed.** `uv` manages its own Python
-  versions — if it doesn't find one it can use, it downloads one itself,
-  automatically, the first time it's needed. Nothing to install or
-  configure beyond `uv` itself, even on a machine with no Python at all.
+  Confirm it worked: `uv --version`. Full install docs, other package
+  managers, uninstall instructions:
+  [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation/).
 - A Gmail address to send *from* (any address works, including the same
   one that receives the digest) — see [Setting up email](#setting-up-email-required-one-time).
 
@@ -53,27 +66,26 @@ Markdown archive of every day's digest, committed alongside its config.
 
 ### Recommended: no fork, no copied code
 
-This repo publishes itself as a reusable GitHub Actions workflow
-(`.github/workflows/digest-reusable.yml`) and a scaffolding command. Any
-repo — new or existing, yours, unrelated to this one — can pull in the
-whole digest engine with one config file and a short workflow. Exact
-steps, assuming the [prerequisites](#prerequisites) above are done:
+This repo publishes itself as a reusable GitHub Actions workflow and a
+scaffolding command — any repo, new or existing, can pull in the whole
+engine with one config file. Assuming [Prerequisites](#prerequisites)
+are done:
 
 **1. Create a new, empty GitHub repository.**
 
-Web UI: go to [github.com/new](https://github.com/new), enter a name
-(e.g. `my-news-digest`), leave it empty (don't check "Add a README"),
-choose Public or Private (either works), click **Create repository**.
+Web UI: [github.com/new](https://github.com/new) → name it (e.g.
+`my-news-digest`) → leave it empty (don't check "Add a README") →
+**Create repository**.
 
-Or, if you have the [`gh` CLI](https://cli.github.com/):
+Or:
 
 ```bash
 gh repo create my-news-digest --private --clone
 cd my-news-digest
 ```
 
-**2. Clone it and run the scaffolder** (skip the `git clone`/`cd` if you
-used `gh repo create --clone` above, which already did this):
+**2. Run the scaffolder** (skip the `git clone`/`cd` if `gh repo create
+--clone` above already did it):
 
 ```bash
 git clone https://github.com/<your-username>/my-news-digest.git
@@ -82,30 +94,16 @@ cd my-news-digest
 uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
 ```
 
-`uvx --from "git+URL"` doesn't clone tech-news-digest into your repo —
-it fetches that repo into `uv`'s own cache, builds and runs the tool
-from there, and exits. Nothing of tech-news-digest's source, tests, or
-git history ends up here; only the files `init` explicitly writes do.
+This creates 5 files here, already wired up: `config/feeds.toml`, two
+workflow files, and `AGENTS.md` + `CLAUDE.md`. Nothing gets cloned into
+your repo — see [How it works](#how-it-works) for what `uvx` is
+actually doing.
 
-This writes five files in the current directory, already pointed at
-the right repo and ref, nothing to copy-paste or get wrong:
-`config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
-`.github/workflows/ci.yml` (lints workflow YAML, validates the
-config actually builds, and scans the repo for leaked secrets on every
-push/PR — see [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)),
-and `AGENTS.md` + `CLAUDE.md` (a scoped copy of the schema and setup
-steps for *this* repo, so an AI agent opened here already has
-everything it needs — see [For AI agents](#for-ai-agents)). It prints
-the exact next steps when it runs, repeated below.
-
-**3. Open your AI coding agent rooted at *this* repo** (a fresh
-session here — not one still pointed at tech-news-digest or some other
-project) **and describe your topic**, or fill in the TODOs in
-`config/feeds.toml` by hand using the schema in
-[Tuning the digest](#tuning-the-digest). `AGENTS.md`/`CLAUDE.md`
-auto-load only for a session whose working directory is this repo, so
-this step only works once the agent is actually opened here — see
-[For AI agents](#for-ai-agents) for why.
+**3. Fill in your topic.** Open an AI coding agent rooted at *this*
+repo and describe your topic — it already has `AGENTS.md` to work from,
+see [For AI agents](#for-ai-agents) — or edit `config/feeds.toml` by
+hand, see
+[Filling in config/feeds.toml without an AI agent](#filling-in-configfeedstoml-without-an-ai-agent).
 
 **4. Commit and push:**
 
@@ -115,66 +113,89 @@ git commit -m "Set up daily digest"
 git push -u origin main
 ```
 
-**5. In this new repo's GitHub settings**, set the three things below —
-see [Setting up email](#setting-up-email-required-one-time) for the
-exact clicks. All three are required; missing any one of them is the
-most common thing that goes wrong (see [Troubleshooting](#troubleshooting)):
+**5. Set 3 required GitHub settings** — full walkthrough in
+[Setting up email](#setting-up-email-required-one-time); missing any
+one is the most common thing that goes wrong (see
+[Troubleshooting](#troubleshooting)):
 
-- Secrets `MAIL_USERNAME` and `MAIL_PASSWORD` (**Secrets** tab)
-- Who receives it, `DIGEST_RECIPIENT` — as either a **Variables**-tab
-  variable (recommended: an email address isn't sensitive, and a
-  variable shows its value in the Settings UI) or a **Secrets**-tab
-  secret. Only one is needed; both work.
-- **Workflow permissions** set to "Read and write" (**Settings > Actions
-  > General**)
+- Secrets `MAIL_USERNAME` and `MAIL_PASSWORD`
+- `DIGEST_RECIPIENT` — as a variable or a secret, either works
+- Workflow permissions → **"Read and write permissions"**
 
-**6. Test it now, don't wait for the schedule.** This sends a real
-digest to your real inbox on demand — do this every time you want to
-confirm the setup (or a config change) actually works, not just once.
-
-Web UI: in this repo on GitHub, go to the **Actions** tab > **Daily
-Digest** (left sidebar) > **Run workflow** > **Run workflow**.
-
-Or, with the [`gh` CLI](https://cli.github.com/) (`gh auth login` once
-if you haven't):
+**6. Test it now, don't wait for the schedule** — sends a real digest
+to your real inbox on demand; do this again anytime you change
+`config/feeds.toml`:
 
 ```bash
 gh workflow run digest.yml --repo <your-username>/<your-repo>
 ```
 
-Either way it takes under a minute — watch it in the Actions tab, or
-with `gh run watch`. Green check: check your inbox and this repo's new
-`digests/` folder. Red X: open the failed step's log, then see
+Or, in the web UI: **Actions** tab → **Daily Digest** → **Run
+workflow**. Takes under a minute. Green check: check your inbox and
+the new `digests/` folder. Red X: open the failed step's log, then see
 [Troubleshooting](#troubleshooting).
 
-Running this often enough to want a shortcut? Add an alias to your
-shell config (`~/.zshrc` or `~/.bashrc`):
+Running this a lot? `alias run-digest='gh workflow run digest.yml --repo <your-username>/<your-repo>'`
+in your shell config, then just run `run-digest`.
 
-```bash
-alias run-digest='gh workflow run digest.yml --repo <your-username>/<your-repo>'
-```
-
-then `source ~/.zshrc` (or open a new terminal) and just run `run-digest`.
-
-That's the entire setup. Nothing to install beyond `uv`, no copy of
-`src/tech_news_digest/` to keep in sync with this repo's own updates —
-`@main` always installs this project's current code straight from
-GitHub at run time, both for `init` and for the daily run itself; this
-project doesn't cut formal releases, so main is the documented, tested
-path rather than a moving target you'd need to keep re-pinning. Pin to a
-tag or commit SHA instead if you'd rather trade that convenience for
-stability against upstream changes. This mirrors how a real GitHub
-Action is meant to be consumed (see
-[GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
-not a fork-and-diverge template.
+That's the entire setup. See [How it works](#how-it-works) for what's
+actually happening on each run, and why the workflow tracks `main`
+instead of a version tag.
 
 ### Alternative: fork it
 
-Only do this if you want to change the *engine itself* (a new fetcher
-type, different classification/rendering logic) — see
-[CONTRIBUTING.md](./CONTRIBUTING.md). If you just want your own topic,
-forking means maintaining a permanent divergent copy of code you'll
-never actually need to touch; use the reusable workflow above instead.
+Only do this if you want to change the *engine itself* — see
+[CONTRIBUTING.md](./CONTRIBUTING.md). For your own topic, use the
+reusable workflow above instead; forking means maintaining a permanent
+divergent copy of code you'll never actually need to touch.
+
+## How it works
+
+**It runs on GitHub Actions** — GitHub's own free automation runner.
+Actions lets a repo run code on GitHub's servers instead of yours, on a
+schedule or on demand, with the run's log visible in that repo's
+**Actions** tab. A "workflow" is one `.yml` file under
+`.github/workflows/` describing one such job. This project has no
+runtime beyond that — the whole tool is one workflow, triggered daily.
+
+**Each run:**
+
+1. Fetches the latest items from a set of RSS/Atom feeds, the public
+   arXiv API, and the Hacker News (Algolia) API for a handful of topic
+   searches — concurrently, so one slow source doesn't hold up the rest.
+2. Drops anything already sent in the last ~45 days, tracked in
+   `state/seen.json`.
+3. Buckets what's left into topic categories by keyword match (see
+   `config/feeds.toml`), capping each category to its configured size.
+4. Renders an HTML email and a Markdown archive page, commits the
+   archive back to the repository, and emails the HTML version.
+
+If a source is down or a feed breaks, that source is simply skipped for
+the day — logged, and named at the bottom of the email — rather than
+failing the whole run. Nothing here needs to be babysat.
+
+**How your repo gets the engine, without a copy of it.** Both
+`tech-news-digest init` and the daily run itself install the engine
+straight from this repo's git history at run time, rather than copying
+any of its code into your repo:
+
+- `uvx --from "git+URL" tech-news-digest init` fetches this repo into
+  `uv`'s own cache, builds and runs the tool from there, and exits —
+  nothing of tech-news-digest's source, tests, or git history ends up
+  in your repo, only the files `init` explicitly writes.
+- Your `digest.yml`'s
+  `uses: LPF9000/tech-news-digest/.github/workflows/digest-reusable.yml@main`
+  line tells GitHub Actions to pull in that workflow's steps at run
+  time, the same way, on GitHub's own runner.
+
+Both default to `@main` rather than a version tag: this project doesn't
+cut formal releases, so `main` is the documented, tested path rather
+than a moving target you'd need to keep re-pinning. Pin to a tag or
+commit SHA instead if you'd rather trade that convenience for stability
+against upstream changes. This mirrors how a real GitHub Action is
+meant to be consumed (see
+[GitHub's own reusable-workflows docs](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows)),
+not a fork-and-diverge template.
 
 ## For AI agents
 
@@ -210,25 +231,6 @@ working directory a session starts in, not a global setting or
 something carried over from a previous session — an agent still open in
 a different project, or in a checkout of tech-news-digest itself, won't
 see them.
-
-## Contents
-
-- [Prerequisites](#prerequisites)
-- [Using this for your own topic](#using-this-for-your-own-topic)
-- [For AI agents](#for-ai-agents)
-- [Setting up email (required, one-time)](#setting-up-email-required-one-time)
-- [Troubleshooting](#troubleshooting)
-- [How it works](#how-it-works)
-- [Repository layout](#repository-layout)
-- [Continuous integration](#continuous-integration)
-- [Continuous integration for your topic repo](#continuous-integration-for-your-topic-repo)
-- [Filling in config/feeds.toml without an AI agent](#filling-in-configfeedstoml-without-an-ai-agent)
-- [Tuning the digest](#tuning-the-digest)
-- [Local development](#local-development)
-- [Example: semiconductor-news-digest](#example-semiconductor-news-digest)
-- [Operational notes](#operational-notes)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## Setting up email (required, one-time)
 
@@ -296,24 +298,6 @@ step's log. The error there is almost always one of these:
 
 Still stuck? [Open an issue](https://github.com/LPF9000/tech-news-digest/issues)
 with the failed step's log.
-
-## How it works
-
-Each run:
-
-1. Fetches the latest items from a set of RSS/Atom feeds, the public
-   arXiv API, and the Hacker News (Algolia) API for a handful of topic
-   searches — concurrently, so one slow source doesn't hold up the rest.
-2. Drops anything already sent in the last ~45 days, tracked in
-   `state/seen.json`.
-3. Buckets what's left into topic categories by keyword match (see
-   `config/feeds.toml`), capping each category to its configured size.
-4. Renders an HTML email and a Markdown archive page, commits the
-   archive back to the repository, and emails the HTML version.
-
-If a source is down or a feed breaks, that source is simply skipped for
-the day — logged, and named at the bottom of the email — rather than
-failing the whole run. Nothing here needs to be babysat.
 
 ## Repository layout
 
