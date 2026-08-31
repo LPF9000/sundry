@@ -77,35 +77,27 @@ jobs:
 
       - uses: ./.github/actions/setup-python-env
 
-      - name: Build digest (dry run — no commit, no cache write)
+      - name: Build digest, and email a preview if mail secrets are set
+        # Dry run either way (no commit, no cache write) — --send-email is
+        # only added when MAIL_USERNAME/MAIL_PASSWORD are actually
+        # configured, so a fork PR without those secrets still builds and
+        # passes, just without a preview email.
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          DIGEST_RECIPIENT: ${{ vars.DIGEST_RECIPIENT || 'bestasitis@gmail.com' }}
         run: |
-          uv run python -m tech_news_digest \
-            --config examples/feeds.toml \
-            --html-output digest_output/latest.html \
-            --no-write-cache \
-            --no-archive
-
-      - name: Check mail secrets are configured
-        id: mail_check
-        run: |
-          if [ -n "${{ secrets.MAIL_USERNAME }}" ] && [ -n "${{ secrets.MAIL_PASSWORD }}" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
+          SEND_ARGS=()
+          if [ -n "$MAIL_USERNAME" ] && [ -n "$MAIL_PASSWORD" ]; then
+            SEND_ARGS=(--send-email --subject-prefix "[PR Preview] " --subject-suffix " — #${{ github.event.pull_request.number }}")
           else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
             echo "::warning::MAIL_USERNAME/MAIL_PASSWORD secrets aren't set yet, so this PR can't " \
                  "send a preview email. See README.md for setup steps; the digest still built " \
                  "successfully above."
           fi
-
-      - name: Send preview email
-        if: steps.mail_check.outputs.configured == 'true'
-        uses: dawidd6/action-send-mail@v18
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "[PR Preview] ${{ env.DIGEST_SUBJECT }} — #${{ github.event.pull_request.number }}"
-          to: ${{ vars.DIGEST_RECIPIENT || 'bestasitis@gmail.com' }}
-          from: "Digest Bot <${{ secrets.MAIL_USERNAME }}>"
-          html_body: file://digest_output/latest.html
+          uv run python -m tech_news_digest \
+            --config examples/feeds.toml \
+            --html-output digest_output/latest.html \
+            --no-write-cache \
+            --no-archive \
+            "${SEND_ARGS[@]}"

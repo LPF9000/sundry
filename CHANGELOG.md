@@ -21,6 +21,13 @@ First stable release.
   retrying a request that can't succeed.
 - A single source failing (dead feed, blocked request, API hiccup) never
   aborts a run — it's named in the digest footer instead.
+- The engine sends its own digest email over plain SMTP
+  (`smtplib`/`email`, standard library, no new dependency) instead of
+  going through a third-party GitHub Action — `tech-news-digest
+  --send-email` is the entire fetch-through-send pipeline in one
+  process. `--send-email` is opt-in, so a plain build or preview never
+  has that side effect. GitHub Actions' own part is now just running
+  that command on a schedule and committing the archive afterward.
 
 ### Setup and reuse
 

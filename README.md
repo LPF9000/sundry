@@ -181,7 +181,7 @@ schedule or on demand, with the run's log visible in that repo's
 `.github/workflows/` describing one such job. This project has no
 runtime beyond that — the whole tool is one workflow, triggered daily.
 
-**Each run:**
+**Each run, start to finish, is one Python process:**
 
 1. Fetches the latest items from a set of RSS/Atom feeds, the public
    arXiv API, and the Hacker News (Algolia) API for a handful of topic
@@ -190,8 +190,11 @@ runtime beyond that — the whole tool is one workflow, triggered daily.
    `state/seen.json`.
 3. Buckets what's left into topic categories by keyword match (see
    `config/feeds.toml`), capping each category to its configured size.
-4. Renders an HTML email and a Markdown archive page, commits the
-   archive back to the repository, and emails the HTML version.
+4. Renders an HTML email and a Markdown archive page, and sends the
+   email itself over SMTP (`smtplib`, standard library — no third-party
+   mail action to trust or keep in sync). GitHub Actions' own part is
+   thin: run that one command, then commit the archive file it just
+   wrote back to the repo.
 
 If a source is down or a feed breaks, that source is simply skipped for
 the day — logged, and named at the bottom of the email — rather than
@@ -286,8 +289,8 @@ see them.
 
 ## Setting up email (required, one-time)
 
-GitHub Actions cannot send mail on its own — it needs an SMTP account to
-send *from*. The easiest free option is a Gmail account with an **App
+The tool sends mail itself over plain SMTP — it needs an account to send
+*from*. The easiest free option is a Gmail account with an **App
 Password** (this works even when the sending account and the recipient
 are the same address).
 
@@ -327,11 +330,11 @@ Variables tab > New repository variable** — or, if you'd rather, a
 `DIGEST_RECIPIENT` secret instead (same page, **Secrets** tab). Either
 one works; the variable is checked first, falling back to the secret.
 
-Using a provider other than Gmail? Swap `server_address`/`server_port` in
-[`ci.yml`](./.github/workflows/ci.yml) (or, for a repo using the reusable
-workflow, its `mail-server`/`mail-port` inputs) for your provider's SMTP
-details (see the
-[action-send-mail docs](https://github.com/dawidd6/action-send-mail)).
+Using a provider other than Gmail? Any standard SMTP server works — pass
+its host/port as your caller workflow's `mail-server`/`mail-port` inputs
+(port `465` connects over implicit TLS, anything else upgrades with
+STARTTLS — both are handled automatically). `MAIL_USERNAME`/
+`MAIL_PASSWORD` stay the same two secrets regardless of provider.
 
 ## Troubleshooting
 
@@ -340,8 +343,8 @@ step's log. The error there is almost always one of these:
 
 | Error / symptom | Cause | Fix |
 | --- | --- | --- |
-| `At least one of 'to', 'cc' or 'bcc' must be specified` | Neither a `DIGEST_RECIPIENT` variable nor a `DIGEST_RECIPIENT` secret is set (recipient can be either — see [Setting up email](#setting-up-email-required-one-time)) | Settings > Secrets and variables > Actions — add `DIGEST_RECIPIENT` on the **Variables** tab (recommended) or the **Secrets** tab |
-| Mail step fails with an auth error (`535`, `Username and Password not accepted`) | `MAIL_USERNAME`/`MAIL_PASSWORD` wrong, or using your normal Gmail password instead of an App Password | Regenerate an [App Password](https://myaccount.google.com/apppasswords) and update the `MAIL_PASSWORD` secret |
+| `--send-email needs a recipient` | Neither a `DIGEST_RECIPIENT` variable nor a `DIGEST_RECIPIENT` secret is set (recipient can be either — see [Setting up email](#setting-up-email-required-one-time)) | Settings > Secrets and variables > Actions — add `DIGEST_RECIPIENT` on the **Variables** tab (recommended) or the **Secrets** tab |
+| `Failed to send digest email` with an auth error (`535`, `Username and Password not accepted`) | `MAIL_USERNAME`/`MAIL_PASSWORD` wrong, or using your normal Gmail password instead of an App Password | Regenerate an [App Password](https://myaccount.google.com/apppasswords) and update the `MAIL_PASSWORD` secret |
 | `Commit archive & dedupe cache` step fails to push | Workflow permissions aren't set to "Read and write" | Settings > Actions > General > Workflow permissions > "Read and write permissions" |
 | `command not found: uvx` (on your own machine) | `uv` isn't installed, or your shell hasn't picked up the new `PATH` yet | Re-run the [install command](#prerequisites), then open a new terminal |
 | A source is missing from the digest, or shows a warning | A feed is temporarily down or blocking automated requests (returns 403/timeouts) | Nothing to fix — by design, the run continues and names the failed source in the email footer; it retries automatically the next run |

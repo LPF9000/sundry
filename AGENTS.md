@@ -98,9 +98,8 @@ should be touched as part of this task. Concretely:
    - Who receives the email, `DIGEST_RECIPIENT` — as EITHER a repository
      variable (Settings > Secrets and variables > Actions > **Variables**
      tab, recommended since it's not sensitive) OR a secret (same page,
-     **Secrets** tab). Only one is needed. Skipping both makes the
-     workflow fail on its email step with `At least one of 'to', 'cc' or
-     'bcc' must be specified`.
+     **Secrets** tab). Only one is needed. Skipping both fails the build
+     step with `--send-email needs a recipient`.
    - **Settings > Actions > General > Workflow permissions** → "Read and
      write permissions" (so it can commit the daily archive)
 7. Tell the user to test it immediately rather than waiting for the

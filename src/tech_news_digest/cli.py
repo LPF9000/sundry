@@ -1,4 +1,4 @@
-"""Command-line entry point: fetch -> dedupe -> classify -> render -> persist."""
+"""Command-line entry point: fetch -> dedupe -> classify -> render -> send."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from .cache import SeenCache
 from .classify import classify
 from .config import DEFAULT_CONFIG_PATH, ConfigError, load_config
 from .fetchers import fetch_all
+from .mailer import MailError, send_digest_email
 from .models import Article, DigestConfig
 from .render import render_html, render_markdown, update_archive_index
 
@@ -23,6 +24,10 @@ from .render import render_html, render_markdown, update_archive_index
 DEFAULT_HTML_OUTPUT = Path("digest_output/latest.html")
 DEFAULT_ARCHIVE_DIR = Path("digests")
 DEFAULT_CACHE_PATH = Path("state/seen.json")
+
+DEFAULT_MAIL_SERVER = "smtp.gmail.com"
+DEFAULT_MAIL_PORT = 465
+DEFAULT_MAIL_FROM_NAME = "Digest Bot"
 
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 
@@ -36,6 +41,10 @@ examples:
 
   # Preview a build without touching committed state (safe to run anytime)
   tech-news-digest --html-output /tmp/preview.html --no-write-cache --no-archive
+
+  # Build AND send it — needs MAIL_USERNAME/MAIL_PASSWORD in the environment
+  # (and a recipient, via --recipient or a DIGEST_RECIPIENT env var)
+  tech-news-digest --send-email
 
   # Point at a config living somewhere else (e.g. a different topic)
   tech-news-digest --config path/to/feeds.toml
@@ -70,6 +79,32 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Don't write/update the Markdown archive. Use for PR previews / dry runs.",
     )
+    parser.add_argument(
+        "--send-email",
+        action="store_true",
+        help="Email the rendered digest over SMTP after building it. Off by default so a plain "
+        "build/preview never has a side effect. Needs MAIL_USERNAME and MAIL_PASSWORD set in "
+        "the environment, and a recipient (--recipient or a DIGEST_RECIPIENT env var).",
+    )
+    parser.add_argument(
+        "--recipient",
+        default="",
+        help="Who receives the digest (only used with --send-email). Falls back to the "
+        "DIGEST_RECIPIENT environment variable if not passed.",
+    )
+    parser.add_argument("--mail-server", default=DEFAULT_MAIL_SERVER, help="SMTP server (only used with --send-email)")
+    parser.add_argument(
+        "--mail-port",
+        type=int,
+        default=DEFAULT_MAIL_PORT,
+        help="SMTP port (only used with --send-email); 465 connects over implicit TLS, anything "
+        "else upgrades with STARTTLS",
+    )
+    parser.add_argument("--mail-from-name", default=DEFAULT_MAIL_FROM_NAME, help="Display name on the From: header")
+    parser.add_argument(
+        "--subject-prefix", default="", help="Text prepended to the email subject, e.g. '[PR Preview] '"
+    )
+    parser.add_argument("--subject-suffix", default="", help="Text appended to the email subject, e.g. ' — #123'")
     parser.add_argument(
         "--log-level",
         default="INFO",
@@ -127,6 +162,11 @@ def _log_summary(categorized: dict[str, list[Article]], config: DigestConfig, fa
     return total_shown
 
 
+def _digest_subject(digest_name: str, run_date: str, total_shown: int) -> str:
+    item_word = "item" if total_shown == 1 else "items"
+    return f"{digest_name} — {run_date} ({total_shown} new {item_word})"
+
+
 def main(argv: list[str] | None = None) -> int:
     raw_argv = sys.argv[1:] if argv is None else argv
     if raw_argv[:1] == ["init"]:
@@ -153,17 +193,38 @@ def main(argv: list[str] | None = None) -> int:
         logger.error("Invalid config at %s:\n  %s", args.config, exc)
         return 1
 
+    # Resolved and validated up front, before doing any of the (slow, live-
+    # network) work below — a misconfigured --send-email should fail in
+    # under a second, not after a full fetch/render cycle.
+    recipient = ""
+    if args.send_email:
+        username = os.environ.get("MAIL_USERNAME", "")
+        password = os.environ.get("MAIL_PASSWORD", "")
+        recipient = args.recipient or os.environ.get("DIGEST_RECIPIENT", "")
+        if not username or not password:
+            logger.error(
+                "--send-email needs MAIL_USERNAME and MAIL_PASSWORD set in the environment "
+                "(as repository secrets, in a real run)."
+            )
+            return 1
+        if not recipient:
+            logger.error(
+                "--send-email needs a recipient: pass --recipient, or set a DIGEST_RECIPIENT "
+                "environment variable (from either a repository variable or secret in the "
+                "calling workflow)."
+            )
+            return 1
+
     cache = SeenCache(args.cache_path)
 
     categorized, failures = build_digest(config, cache)
     total_shown = _log_summary(categorized, config, failures)
 
     run_date = datetime.now(UTC).strftime("%Y-%m-%d")
+    html_body = render_html(run_date, categorized, config.categories, failures, config.digest_name)
 
     args.html_output.parent.mkdir(parents=True, exist_ok=True)
-    args.html_output.write_text(
-        render_html(run_date, categorized, config.categories, failures, config.digest_name), encoding="utf-8"
-    )
+    args.html_output.write_text(html_body, encoding="utf-8")
     logger.info("Wrote %s", args.html_output)
 
     if not args.no_archive:
@@ -179,20 +240,27 @@ def main(argv: list[str] | None = None) -> int:
     if not args.no_write_cache:
         cache.save()
 
-    _write_github_actions_outputs(config.digest_name, run_date, total_shown)
+    if args.send_email:
+        subject = (
+            f"{args.subject_prefix}{_digest_subject(config.digest_name, run_date, total_shown)}{args.subject_suffix}"
+        )
+        try:
+            send_digest_email(
+                html_body=html_body,
+                subject=subject,
+                server=args.mail_server,
+                port=args.mail_port,
+                username=os.environ["MAIL_USERNAME"],
+                password=os.environ["MAIL_PASSWORD"],
+                recipient=recipient,
+                from_name=args.mail_from_name,
+            )
+        except MailError as exc:
+            logger.error(str(exc))
+            return 1
+        logger.info("Emailed digest to %s", recipient)
+
     return 0
-
-
-def _write_github_actions_outputs(digest_name: str, run_date: str, total_shown: int) -> None:
-    """Expose the email subject/send-gate to later workflow steps, if running in CI."""
-    github_env = os.environ.get("GITHUB_ENV")
-    if not github_env:
-        return
-    item_word = "item" if total_shown == 1 else "items"
-    subject = f"{digest_name} — {run_date} ({total_shown} new {item_word})"
-    with open(github_env, "a", encoding="utf-8") as f:
-        f.write(f"DIGEST_SUBJECT={subject}\n")
-        f.write("DIGEST_HAS_CONTENT=true\n")
 
 
 if __name__ == "__main__":

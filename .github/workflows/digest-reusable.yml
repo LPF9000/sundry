@@ -11,6 +11,11 @@ name: Reusable Digest Builder
 # pinned tag current. Pin to a specific tag or commit SHA instead if you
 # want extra stability against upstream changes.
 #
+# The engine builds AND sends the digest itself (see mailer.py) — this
+# workflow's only job is to run it on a schedule, pass it credentials as
+# environment variables, and commit the archive afterward. There's no
+# third-party mail action or separate send step here to keep in sync.
+#
 # This repo ships no topic of its own — its own CI (ci.yml) builds
 # `examples/feeds.toml` directly from the committed uv.lock to test the
 # engine, rather than calling this workflow on itself.
@@ -28,9 +33,12 @@ on:
           engine from. Defaults to "main" — this project doesn't cut
           formal releases, so tracking main is the documented, tested
           path. Override with a tag or commit SHA if you'd rather pin
-          against upstream changes (must be v2.0.0 or later: earlier
-          tags predate the tech-news-digest rename and install a package
-          whose CLI entry point is still named semiconductor-digest).
+          against upstream changes, but it must be recent enough to
+          support the CLI flags this workflow passes it — at minimum
+          v2.0.0 (earlier tags predate the tech-news-digest rename) and,
+          as of the engine sending its own email, past the commit that
+          added --send-email; an older pin fails with an "unrecognized
+          arguments" error rather than silently misbehaving.
         type: string
         default: main
       recipient:
@@ -80,26 +88,28 @@ jobs:
       # config/feeds.toml, digests/, and state/seen.json live.
       - uses: actions/checkout@v7
 
-      - name: Check recipient is configured
-        # The `secrets` context isn't available in step `if:` conditions,
-        # only in run/with/env — so this checks both inside the script
-        # rather than in `if:`.
-        run: |
-          if [ -z "${{ inputs.recipient }}" ] && [ -z "${{ secrets.DIGEST_RECIPIENT }}" ]; then
-            echo "::error::No recipient email configured. Neither inputs.recipient nor secrets.DIGEST_RECIPIENT resolved to a value."
-            echo "::error::In THIS repository (not tech-news-digest): set a DIGEST_RECIPIENT repository variable (Settings > Secrets and variables > Actions > Variables tab) OR a DIGEST_RECIPIENT secret (same page, Secrets tab), and make sure your caller workflow passes it through (with: recipient / secrets: DIGEST_RECIPIENT). Then re-run this workflow."
-            exit 1
-          fi
-
       - uses: astral-sh/setup-uv@v10.0.1
         with:
           python-version: ${{ inputs.python-version }}
           enable-cache: true
 
-      - name: Build digest
+      - name: Build digest and send email
+        # The engine sends its own email over plain SMTP (see mailer.py)
+        # — this step is the entire pipeline, fetch through send. If
+        # neither inputs.recipient nor secrets.DIGEST_RECIPIENT resolves
+        # to a value, --send-email fails this step with a clear reason;
+        # nothing here needs to check for that separately.
+        env:
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          DIGEST_RECIPIENT: ${{ inputs.recipient || secrets.DIGEST_RECIPIENT }}
         run: |
           uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@${{ inputs.digest-ref }}" \
-            tech-news-digest --config "${{ inputs.config-path }}"
+            tech-news-digest --config "${{ inputs.config-path }}" \
+            --send-email \
+            --mail-server "${{ inputs.mail-server }}" \
+            --mail-port "${{ inputs.mail-port }}" \
+            --mail-from-name "${{ inputs.mail-from-name }}"
 
       - name: Commit archive & dedupe cache
         run: |
@@ -108,16 +118,3 @@ jobs:
           git add digests state/seen.json
           git diff --cached --quiet || git commit -m "Daily digest $(date -u +%Y-%m-%d)"
           git push
-
-      - name: Send email
-        if: env.DIGEST_HAS_CONTENT == 'true'
-        uses: dawidd6/action-send-mail@v18
-        with:
-          server_address: ${{ inputs.mail-server }}
-          server_port: ${{ inputs.mail-port }}
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: ${{ env.DIGEST_SUBJECT }}
-          to: ${{ inputs.recipient || secrets.DIGEST_RECIPIENT }}
-          from: "${{ inputs.mail-from-name }} <${{ secrets.MAIL_USERNAME }}>"
-          html_body: file://digest_output/latest.html
