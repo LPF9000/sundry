@@ -50,7 +50,7 @@ should be touched as part of this task. Concretely:
    where every file below gets created — not here), run:
 
    ```bash
-   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" tech-news-digest init
+   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" tech-news-digest init
    ```
 
    This writes three files in the **current directory** — wherever you
@@ -68,7 +68,7 @@ should be touched as part of this task. Concretely:
    of this repo needed):
 
    ```bash
-   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@v2.0.0" \
+   uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@main" \
      tech-news-digest --config config/feeds.toml \
      --html-output /tmp/preview.html --no-write-cache --no-archive
    ```
@@ -112,7 +112,8 @@ should be touched as part of this task. Concretely:
    above cover the common cases.
 8. That's the entire setup. No `pip install`, no cloning this repo, no
    copying `src/`. The reusable workflow installs the digest engine
-   straight from this repo's tagged release at run time.
+   straight from this repo's `main` branch at run time — this project
+   doesn't cut formal releases, so main is the documented path.
 
 If the user instead wants to **modify the engine itself** (a new fetcher
 type, different classification logic) — the one case that *does* mean

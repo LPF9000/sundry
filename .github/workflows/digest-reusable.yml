@@ -6,7 +6,10 @@ name: Reusable Digest Builder
 # `tech-news-digest init` in that repo to generate it). This checks out
 # and commits back to the CALLING repo; the digest engine itself is
 # installed straight from this repo's git history at `inputs.digest-ref`,
-# pinned to a release tag by default for stability.
+# `main` by default — this project doesn't do formal releases, so the
+# documented flow just tracks main rather than asking callers to keep a
+# pinned tag current. Pin to a specific tag or commit SHA instead if you
+# want extra stability against upstream changes.
 #
 # This repo ships no topic of its own — its own CI (ci.yml) builds
 # `examples/feeds.toml` directly from the committed uv.lock to test the
@@ -22,12 +25,14 @@ on:
       digest-ref:
         description: >
           Git ref of LPF9000/tech-news-digest to install the digest
-          engine from. Pin to a release tag (e.g. "v2.0.0") for stability
-          — "main" can change under you. Must be v2.0.0 or later: earlier
+          engine from. Defaults to "main" — this project doesn't cut
+          formal releases, so tracking main is the documented, tested
+          path. Override with a tag or commit SHA if you'd rather pin
+          against upstream changes (must be v2.0.0 or later: earlier
           tags predate the tech-news-digest rename and install a package
-          whose CLI entry point is still named semiconductor-digest.
+          whose CLI entry point is still named semiconductor-digest).
         type: string
-        default: v2.0.0
+        default: main
       recipient:
         description: >
           Who receives the digest email. Pass your repo's own

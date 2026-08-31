@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 # Keep in sync with digest-reusable.yml's own `inputs.digest-ref.default`.
-DEFAULT_ENGINE_REF = "v2.0.0"
+DEFAULT_ENGINE_REF = "main"
 
 _GITHUB_REMOTE_RE = re.compile(r"github\.com[:/]([^/]+)/(.+?)(?:\.git)?/?$")
 
