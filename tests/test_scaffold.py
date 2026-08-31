@@ -12,9 +12,13 @@ def test_init_creates_config_and_workflow(tmp_path):
     config_path = tmp_path / "config" / "feeds.toml"
     workflow_path = tmp_path / ".github" / "workflows" / "digest.yml"
     ci_path = tmp_path / ".github" / "workflows" / "ci.yml"
+    agents_path = tmp_path / "AGENTS.md"
+    claude_path = tmp_path / "CLAUDE.md"
     assert config_path.is_file()
     assert workflow_path.is_file()
     assert ci_path.is_file()
+    assert agents_path.is_file()
+    assert claude_path.is_file()
 
 
 def test_init_config_is_valid_and_ready_to_build():
@@ -70,6 +74,49 @@ def test_init_refuses_to_overwrite_ci_workflow_without_force(tmp_path):
     ci_path.write_text("placeholder", encoding="utf-8")
     assert run_init([str(tmp_path)]) == 1
     assert ci_path.read_text() == "placeholder"
+
+
+def test_init_refuses_to_overwrite_agents_md_without_force(tmp_path):
+    agents_path = tmp_path / "AGENTS.md"
+    agents_path.write_text("placeholder", encoding="utf-8")
+    assert run_init([str(tmp_path)]) == 1
+    assert agents_path.read_text() == "placeholder"
+
+
+def test_init_agents_md_has_the_schema_and_is_valid_toml(tmp_path):
+    import tomllib
+
+    run_init([str(tmp_path)])
+    agents_text = (tmp_path / "AGENTS.md").read_text()
+    assert "## config/feeds.toml schema" in agents_text
+    assert "## Never do this" in agents_text
+
+    # Pull the fenced ```toml block out and confirm it actually parses —
+    # the schema reference is only useful to an agent if it's correct.
+    block = agents_text.split("```toml\n", 1)[1].split("\n```", 1)[0]
+    tomllib.loads(block)
+
+
+def test_init_agents_md_pins_the_ref_and_detected_repo_slug(tmp_path):
+    from tech_news_digest.scaffold import DEFAULT_ENGINE_REF
+
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://github.com/someone/some-repo.git"],
+        cwd=tmp_path,
+        check=True,
+        capture_output=True,
+    )
+    run_init([str(tmp_path)])
+    agents_text = (tmp_path / "AGENTS.md").read_text()
+    assert f"tech-news-digest.git@{DEFAULT_ENGINE_REF}" in agents_text
+    assert "gh workflow run digest.yml --repo someone/some-repo" in agents_text
+
+
+def test_init_claude_md_points_at_agents_md(tmp_path):
+    run_init([str(tmp_path)])
+    claude_text = (tmp_path / "CLAUDE.md").read_text()
+    assert "AGENTS.md" in claude_text
 
 
 def test_init_refuses_to_overwrite_without_force(tmp_path, capsys):

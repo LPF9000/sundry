@@ -24,16 +24,20 @@ First stable release.
 
 ### Setup and reuse
 
-- `tech-news-digest init` scaffolds a new topic repo's `config/feeds.toml`
-  and both workflow files (the scheduled run, and a CI that lints
-  workflows, validates the config, and scans for leaked secrets) in one
-  command via `uvx` — no local install or clone.
+- `tech-news-digest init` scaffolds a new topic repo's `config/feeds.toml`,
+  both workflow files (the scheduled run, and a CI that lints workflows,
+  validates the config, and scans for leaked secrets), and a scoped
+  `AGENTS.md` + `CLAUDE.md` pair — in one command via `uvx`, no local
+  install or clone.
 - `.github/workflows/digest-reusable.yml` lets any repo pull in the
   engine without forking or copying code, installed straight from this
   repo's `main` branch at run time (no release tags to track).
 - `AGENTS.md` gives an AI coding agent everything it needs to set this up
   for a new topic end to end, including the boundary that setup always
-  happens in the *caller's* repo, never this one.
+  happens in the *caller's* repo, never this one. The `AGENTS.md` +
+  `CLAUDE.md` `init` writes into that caller's repo mean an agent opened
+  there afterward has the schema and setup steps on disk already —
+  nothing to fetch from this repo at all.
 
 ### Tooling
 

@@ -3,12 +3,14 @@
 Run this *inside the repo you want the digest to live in* — typically via
 `uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@<ref>"
 tech-news-digest init`, so nothing needs installing locally. It writes
-three files, all pointed at the right engine repo and ref already:
+five files, all pointed at the right engine repo and ref already:
 `config/feeds.toml`, `.github/workflows/digest.yml` (the scheduled run),
-and `.github/workflows/ci.yml` (lints workflows, validates the config,
-and scans for leaked secrets on every push/PR). Only the topic content
-(sources/categories/keywords) is left as placeholders for a human or an
-AI agent to fill in.
+`.github/workflows/ci.yml` (lints workflows, validates the config, and
+scans for leaked secrets on every push/PR), and `AGENTS.md` + `CLAUDE.md`
+(so an AI coding agent opened in the new repo already has the schema and
+setup steps locally, with nothing to fetch or clone). Only the topic
+content (sources/categories/keywords) is left as placeholders for a
+human or an AI agent to fill in.
 """
 
 from __future__ import annotations
@@ -173,25 +175,156 @@ jobs:
             detect --source /repo --no-banner -v
 """
 
+# Hand-written for an AI agent to act on directly, not a dump of this
+# project's own AGENTS.md — kept short, imperative, and scoped to what
+# this specific repo needs, per the agents.md convention's own guidance.
+TOPIC_AGENTS_TEMPLATE = """\
+# AGENTS.md
+
+Instructions for AI coding agents (Claude Code, Cursor, Codex, Copilot,
+etc.) working in this repository. Humans: see README.md instead.
+
+## Never do this
+
+- Never put a credential (mail password, API key, token) in
+  `config/feeds.toml` or any other committed file. `MAIL_USERNAME`,
+  `MAIL_PASSWORD`, and `DIGEST_RECIPIENT` belong only in this repo's
+  GitHub Settings > Secrets and variables > Actions.
+- Never change the `uses:` line in `.github/workflows/digest.yml` to
+  anything other than `LPF9000/tech-news-digest` — that workflow
+  installs the digest engine fresh from that repo on every run. There
+  is nothing to fork or vendor here.
+- Never add topic content (sources, categories, keywords) anywhere but
+  `config/feeds.toml`.
+
+## What this repo is
+
+A generated instance of
+[tech-news-digest](https://github.com/LPF9000/tech-news-digest): a
+scheduled GitHub Actions workflow that fetches RSS/Atom feeds, arXiv,
+and Hacker News per `config/feeds.toml`, classifies items into
+categories by keyword, and emails an HTML digest. The engine itself
+lives upstream and is installed at run time — nothing in this repo
+needs a local install, a clone of tech-news-digest, or a fork.
+
+## The most common task: fill in config/feeds.toml
+
+If asked to set up or change this digest's topic, sources, or
+categories, edit `config/feeds.toml` directly using the schema below —
+don't touch anything else. Then validate it builds before telling the
+user it's done:
+
+```bash
+uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
+  tech-news-digest --config config/feeds.toml \\
+  --html-output /tmp/preview.html --no-write-cache --no-archive
+```
+
+This needs no credentials and writes nothing back to the repo. A
+`FileNotFoundError`/`ConfigError` prints a clear, actionable reason
+(missing categories, no `general` key, an unknown `default_category`,
+etc.) — read it before telling the user it's done.
+
+## config/feeds.toml schema
+
+```toml
+# Optional. Title used in the email/archive header and email subject.
+# Defaults to "Daily Digest" if omitted.
+digest_name = "Your Topic Digest"
+
+# Optional. Hacker News (Algolia) search terms — plain strings.
+# MUST appear before any [[...]] table below (TOML attaches bare
+# key = value lines to the most recently opened table, not the document
+# root — putting hn_queries after a [[rss_sources]] block silently makes
+# it a field of the last rss_sources entry instead of top-level).
+hn_queries = ["search term one", "search term two"]
+
+# Zero or more RSS/Atom feeds.
+[[rss_sources]]
+name = "Human-readable source name"
+url = "https://example.com/feed.xml"
+# Optional: force every item from this feed into one category regardless
+# of keyword score. Use for a feed that's already 100% on-topic.
+default_category = "some_category_key"
+
+# Zero or more arXiv API searches (https://info.arxiv.org/help/api/index.html).
+[[arxiv_sources]]
+name = "Human-readable search name"
+query = 'cat:cs.AR AND abs:"some phrase"'
+max_results = 25  # optional, default 20
+
+# One or more categories, in the order you want them to appear.
+# Exactly one category MUST have key = "general" — it's the catch-all
+# for anything that scores zero keyword matches; config loading raises
+# if it's missing.
+[[categories]]
+key = "unique_snake_case_key"
+title = "Human-readable Category Title"
+blurb = "One or two sentences shown under the title, explaining what this category covers and why it matters."
+max_items = 8  # cap on how many items this category shows per run
+keywords = [
+  "keyword one",
+  "keyword two",
+  # matched case-insensitively as a substring of title+summary;
+  # a title match scores double a summary-only match. Pad short/ambiguous
+  # terms with spaces, e.g. " ai " not "ai", to avoid matching inside
+  # unrelated words.
+]
+```
+
+## Changing the schedule
+
+Edit the `cron` line in `.github/workflows/digest.yml` — always UTC,
+standard 5-field cron: e.g. `"0 8 * * *"` for 08:00 UTC, `"0 */6 * * *"`
+for every 6 hours, `"0 12 * * 1-5"` for weekdays only.
+
+## Testing a change for real
+
+Config and schedule changes are worth confirming with a real run rather
+than waiting for the schedule — it sends a real email to the configured
+recipient:
+
+```bash
+gh workflow run digest.yml --repo {repo_slug}
+```
+
+or, in the web UI, Actions tab > Daily Digest > Run workflow. A red run
+means opening the failed step's log — an empty recipient is the most
+common cause; see the three required settings in README.md.
+
+## If asked to change how the digest works, not just its content
+
+Fetching, dedupe, classification, and rendering all live upstream in
+tech-news-digest, not here. Point the user at
+https://github.com/LPF9000/tech-news-digest instead of attempting it in
+this repo — that project has its own contribution process for engine
+changes.
+"""
+
+TOPIC_CLAUDE_TEMPLATE = """\
+# CLAUDE.md
+
+See [AGENTS.md](./AGENTS.md) — the instructions for AI agents working in
+or with this repository live there, written to the cross-tool
+[agents.md](https://agents.md) convention rather than duplicated here.
+"""
+
 NEXT_STEPS = """\
-All three files were created in *this* repo (the one you ran this
+All five files were created in *this* repo (the one you ran this
 command in), not in tech-news-digest itself — nothing there needs
 cloning or editing.
 
 Next steps:
 
-1. Fill in the TODOs in {config_path} — either by hand, or by handing the
-   file to your AI coding agent along with a description of your topic.
-   Ready-to-paste prompt:
+1. Fill in the TODOs in {config_path}. If you're using an AI coding
+   agent, just open it in this repo and ask it to do this step — it now
+   has {agents_path} right here with the full schema and instructions,
+   nothing to fetch or clone. Otherwise, do it by hand using the schema
+   in the file's comments, then validate it builds:
 
-     Fill in {config_path} for the following topic: <describe your
-     topic and any sources/keywords you already know>. Follow the schema
-     already in the file's comments (also documented at
-     https://github.com/LPF9000/tech-news-digest/blob/main/AGENTS.md#configfeedstoml-schema).
-     Then validate it builds:
-       uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
-         tech-news-digest --config {config_path} \\
-         --html-output /tmp/preview.html --no-write-cache --no-archive
+     uvx --from "git+https://github.com/LPF9000/tech-news-digest.git@{ref}" \\
+       tech-news-digest --config {config_path} \\
+       --html-output /tmp/preview.html --no-write-cache --no-archive
 
 2. In this repository's GitHub settings, set all three of the following
    (all required — missing any one is the most common setup mistake):
@@ -207,13 +340,14 @@ Next steps:
    - Settings > Actions > General > Workflow permissions -> "Read and
      write permissions" (so the workflow can commit each day's archive)
 
-3. Commit and push {config_path}, {workflow_path}, and {ci_path}. The
-   digest workflow runs daily at 12:00 UTC, or on demand from the Actions
-   tab — edit the `cron` line in {workflow_path} for a different time or
-   frequency (see the comment above it). {ci_path} runs on every push/PR
-   from here on: it lints workflow YAML, validates config/feeds.toml
-   actually builds, and scans the repo for leaked secrets — you don't
-   need to do anything further to enable it.
+3. Commit and push {config_path}, {workflow_path}, {ci_path},
+   {agents_path}, and {claude_path}. The digest workflow runs daily at
+   12:00 UTC, or on demand from the Actions tab — edit the `cron` line in
+   {workflow_path} for a different time or frequency (see the comment
+   above it). {ci_path} runs on every push/PR from here on: it lints
+   workflow YAML, validates config/feeds.toml actually builds, and scans
+   the repo for leaked secrets — you don't need to do anything further to
+   enable it.
 
 4. Test it now rather than waiting for the schedule — do this again any
    time you change {config_path} too, not just once. Sends a real email
@@ -282,15 +416,19 @@ def run_init(argv: list[str] | None = None) -> int:
     config_path = args.directory / "config" / "feeds.toml"
     workflow_path = args.directory / ".github" / "workflows" / "digest.yml"
     ci_path = args.directory / ".github" / "workflows" / "ci.yml"
+    agents_path = args.directory / "AGENTS.md"
+    claude_path = args.directory / "CLAUDE.md"
 
     if not args.force:
-        existing = [str(p) for p in (config_path, workflow_path, ci_path) if p.exists()]
+        existing = [str(p) for p in (config_path, workflow_path, ci_path, agents_path, claude_path) if p.exists()]
         if existing:
             print(
                 f"error: already exists: {', '.join(existing)} (pass --force to overwrite)",
                 file=sys.stderr,
             )
             return 1
+
+    repo_slug = _detect_repo_slug(args.directory)
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(CONFIG_TEMPLATE, encoding="utf-8")
@@ -301,16 +439,22 @@ def run_init(argv: list[str] | None = None) -> int:
     ci_path.parent.mkdir(parents=True, exist_ok=True)
     ci_path.write_text(CI_WORKFLOW_TEMPLATE.format(ref=args.ref), encoding="utf-8")
 
+    agents_path.write_text(TOPIC_AGENTS_TEMPLATE.format(ref=args.ref, repo_slug=repo_slug), encoding="utf-8")
+    claude_path.write_text(TOPIC_CLAUDE_TEMPLATE, encoding="utf-8")
+
     print(f"Created {config_path}")
     print(f"Created {workflow_path}")
     print(f"Created {ci_path}")
+    print(f"Created {agents_path}")
+    print(f"Created {claude_path}")
     print()
-    repo_slug = _detect_repo_slug(args.directory)
     print(
         NEXT_STEPS.format(
             config_path=config_path,
             workflow_path=workflow_path,
             ci_path=ci_path,
+            agents_path=agents_path,
+            claude_path=claude_path,
             ref=args.ref,
             repo_slug=repo_slug,
         )
