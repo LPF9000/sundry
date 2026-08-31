@@ -119,10 +119,15 @@ Next steps:
          tech-news-digest --config {config_path} \\
          --html-output /tmp/preview.html --no-write-cache --no-archive
 
-2. In this repository's GitHub settings, set:
-   - Secrets `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an App
+2. In this repository's GitHub settings, set all three of the following
+   (all required — missing any one is the most common setup mistake,
+   especially the variable below: it's on a different settings tab than
+   the two secrets, so it's easy to add the secrets and stop there):
+   - Settings > Secrets and variables > Actions > **Secrets** tab:
+     `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an App
      Password: https://myaccount.google.com/apppasswords)
-   - Variable `DIGEST_RECIPIENT` (who receives the email)
+   - Settings > Secrets and variables > Actions > **Variables** tab:
+     `DIGEST_RECIPIENT` (who receives the email)
    - Settings > Actions > General > Workflow permissions -> "Read and
      write permissions" (so the workflow can commit each day's archive)
 
@@ -130,6 +135,13 @@ Next steps:
    daily at 12:00 UTC, or on demand from the Actions tab — edit the
    `cron` line in {workflow_path} for a different time or frequency
    (see the comment above it).
+
+4. Test it now rather than waiting for the schedule: on GitHub, Actions
+   tab > Daily Digest > Run workflow > Run workflow. Green check: check
+   your inbox and this repo's new digests/ folder. Red X: open the
+   failed step's log — see
+   https://github.com/LPF9000/tech-news-digest/blob/main/README.md#troubleshooting
+   for the common causes (an empty recipient is by far the most common).
 """
 
 
