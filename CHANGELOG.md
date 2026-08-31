@@ -49,6 +49,13 @@ First stable release.
   mechanics, the reusable-workflow pinning rationale, and a plain-terms
   explanation of what GitHub Actions actually is all moved into an
   expanded "How it works," rather than sitting inline in the steps.
+- README.md opening rewritten to lead with what this actually is —
+  a self-hosted, serverless monitoring pipeline for a niche, not a
+  news app — and why: no server to run, works from a personal repo
+  under restrictive IT policy, free, dependency-light, config-driven.
+  Adds a "Known limitations" section stating plainly that ranking is
+  keyword-substring matching with no relevance scoring, clustering, or
+  source weighting, and why that's a deliberate tradeoff for now.
 
 ### Tooling
 
