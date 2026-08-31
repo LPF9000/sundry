@@ -87,15 +87,16 @@ should be touched as part of this task. Concretely:
    access to it; otherwise tell them to.
 6. Tell the user to set three things in their repo's GitHub settings —
    this is the only manual step, you cannot do it for them, and **all
-   three are required**. In practice the middle one is the one people
-   miss, because it's a different settings tab from the first two:
+   three are required**:
    - Settings > Secrets and variables > Actions > **Secrets** tab:
      `MAIL_USERNAME` / `MAIL_PASSWORD` (a Gmail address + an
      [App Password](https://myaccount.google.com/apppasswords))
-   - Settings > Secrets and variables > Actions > **Variables** tab:
-     `DIGEST_RECIPIENT` (who receives the email) — skipping this makes
-     the workflow fail on its email step with `At least one of 'to',
-     'cc' or 'bcc' must be specified`
+   - Who receives the email, `DIGEST_RECIPIENT` — as EITHER a repository
+     variable (Settings > Secrets and variables > Actions > **Variables**
+     tab, recommended since it's not sensitive) OR a secret (same page,
+     **Secrets** tab). Only one is needed. Skipping both makes the
+     workflow fail on its email step with `At least one of 'to', 'cc' or
+     'bcc' must be specified`.
    - **Settings > Actions > General > Workflow permissions** → "Read and
      write permissions" (so it can commit the daily archive)
 7. Tell the user to test it immediately rather than waiting for the
