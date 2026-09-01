@@ -227,6 +227,18 @@ are deliberate scope decisions, not bugs waiting to be filed:
 - **Dedupe is exact-URL only.** The same story from two different feeds,
   worded differently, shows up twice — a real near-duplicate clustering
   step would catch that; this doesn't attempt it.
+- **GitHub's own scheduler isn't 100% reliable, and a dropped run leaves
+  no trace.** A `cron:` trigger only starts a workflow once GitHub's
+  backend decides to enqueue it; when it doesn't, there's no run, no
+  job, no log — the Actions tab just shows nothing for that day, same
+  as if the workflow never existed. GitHub's own docs say scheduled
+  runs [can be delayed or dropped under high load, especially at the
+  exact top of the hour](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflows-run/events-that-trigger-workflows#schedule),
+  and recommend offsetting a few minutes off `:00` — real, but partial,
+  mitigation; nothing guarantees a scheduled run fires every single
+  day. If a day goes by with no email and no run at all in the Actions
+  tab (not a failed run — no run), that's the signature. See
+  [Troubleshooting](#troubleshooting).
 
 None of this is unfixable — it's what's out of scope for now to keep
 the tool's behavior simple and easy to reason about, rather than risk
@@ -332,6 +344,7 @@ step's log. The error there is almost always one of these:
 | A source is missing from the digest, or shows a warning | A feed is temporarily down or blocking automated requests (returns 403/timeouts) | Nothing to fix — by design, the run continues and names the failed source in the email footer; it retries automatically the next run |
 | Digest email is basically empty on day one | Expected — see [Operational notes](#operational-notes) | Nothing to fix; from day two onward it's a real daily delta |
 | `ConfigError: ... a 'general' catch-all category is required` | `config/feeds.toml` is missing a category with `key = "general"` | Add one — see the schema in [Tuning the digest](#tuning-the-digest) |
+| No email, and the Actions tab shows no run at all for that day (not a failed run — nothing) | GitHub's own scheduler silently dropped the cron tick — a documented platform limitation, not a config problem (see [Known limitations](#known-limitations)) | Trigger it manually meanwhile (**Actions** tab > **Run workflow**); if it keeps happening, offset the `cron` a few minutes off `:00`, e.g. `7 8 * * *` instead of `0 8 * * *` — [GitHub's docs](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflows-run/events-that-trigger-workflows#schedule) call the exact hour out as higher-risk |
 
 Still stuck? [Open an issue](https://github.com/LPF9000/sundry/issues)
 with the failed step's log.
